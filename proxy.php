@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$targetApiUrl = 'https://script.google.com/macros/s/AKfycbzjDL_pAeT5pLl9LcAgSJFgSApK9-2SQ1siT6-rVQE_MbeItiZQrVIJ6XFQivCo6NFY/exec';
+$targetApiUrl = 'https://script.google.com/macros/s/AKfycbzGXDz4aAfSxNxJ7Kq0AJNrieQ8SVVQiNfAnXIAK5FtXZidBu1rEROHJ0EVzCM9O1am/exec';
 $targetApiKey = 'AIzaSyCXCHIB8bLk27t9_pVQ7LK3jX4F64lbyH4';
 
 $payload = [];
