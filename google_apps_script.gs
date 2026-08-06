@@ -29,6 +29,10 @@ function doPost(e) {
     }
 
     switch (action) {
+      case 'loginUser':
+        return jsonResponse(loginUser(payload));
+      case 'registerUser':
+        return jsonResponse(registerUser(payload));
       case 'getDashboardData':
         return jsonResponse(getDashboardData(payload));
       case 'getUserProfile':
@@ -53,6 +57,12 @@ function doPost(e) {
   }
 }
 
+// หมายเหตุสำคัญเรื่อง CORS:
+// Google Apps Script Web App ไม่สามารถตอบสนอง Preflight (OPTIONS) request ได้อย่างสมบูรณ์
+// (แม้จะมี doOptions ด้านล่าง แต่ Apps Script runtime มักไม่เรียกใช้งานจริงตามที่เบราว์เซอร์คาดหวัง)
+// ดังนั้นวิธีแก้ปัญหาหลักคือฝั่ง "ไคลเอนต์ (index.html)" ต้องส่งคำขอแบบ Simple Request เท่านั้น
+// (Content-Type: text/plain และไม่มี Custom Header เช่น X-API-Key) เพื่อไม่ให้เบราว์เซอร์ส่ง Preflight มาก่อน
+// เมื่อเป็น Simple Request แล้ว Apps Script จะตอบกลับพร้อม Access-Control-Allow-Origin: * โดยอัตโนมัติ
 function doOptions(e) {
   return createCorsResponse('', 204);
 }
@@ -145,7 +155,8 @@ function getOrCreateUser(userEmail, username) {
   const values = sheet.getDataRange().getDisplayValues();
   const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password'];
   const rows = values.slice(1);
-  const userId = userEmail || `user-${Date.now()}`;
+  // ทำให้เป็นตัวพิมพ์เล็กเสมอ ให้สอดคล้องกับ registerUser()/loginUser() ป้องกันการสร้าง user ซ้ำจากตัวพิมพ์ใหญ่/เล็กต่างกัน
+  const userId = String(userEmail || `user-${Date.now()}`).trim().toLowerCase();
 
   const existing = rows.find((row) => String(getCellValue(row, headers, 'UserID', '')) === String(userId));
   if (existing) {

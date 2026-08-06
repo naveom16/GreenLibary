@@ -14,6 +14,11 @@
         window.NRRU_GREEN_CONFIG = window.NRRU_GREEN_CONFIG || {
             API_URL: 'https://script.google.com/macros/s/AKfycbyInK9UqBhBC2nLJGUgRv6IRgGI7NBuGKj7GvkcwbLrBar7vxjpOafhA-t67cbVsaQ/exec',
             API_KEY: '',
+            // [NEW] ถ้า deploy บนโฮสต์ที่รองรับ PHP (ไม่ใช่ GitHub Pages) และต้องการใช้ proxy.php
+            // เพื่อซ่อน API_KEY ไว้ฝั่งเซิร์ฟเวอร์ ให้ใส่ URL ของ proxy.php ที่นี่ เช่น '/proxy.php'
+            // ถ้าปล่อยว่างไว้ (ค่าเริ่มต้น) ระบบจะเรียก Google Apps Script (API_URL) ตรง ๆ จากเบราว์เซอร์
+            // ซึ่งใช้ได้ทันทีบน GitHub Pages (Static Hosting ไม่มี PHP)
+            PROXY_URL: '',
             USE_MOCK_DATA: false
         };
     </script>
@@ -508,6 +513,7 @@
     <script>
         const configuredApiUrl = (window.NRRU_GREEN_CONFIG && window.NRRU_GREEN_CONFIG.API_URL) || '';
         const configuredApiKey = (window.NRRU_GREEN_CONFIG && window.NRRU_GREEN_CONFIG.API_KEY) || '';
+        const configuredProxyUrl = (window.NRRU_GREEN_CONFIG && window.NRRU_GREEN_CONFIG.PROXY_URL) || '';
         const useMockData = typeof window.NRRU_GREEN_CONFIG?.USE_MOCK_DATA === 'boolean'
             ? window.NRRU_GREEN_CONFIG.USE_MOCK_DATA
             : !configuredApiUrl;
@@ -515,6 +521,7 @@
         const APP_CONFIG = {
             apiUrl: configuredApiUrl,
             apiKey: configuredApiKey,
+            proxyUrl: configuredProxyUrl,
             useMockData
         };
 
@@ -547,23 +554,44 @@
                 }
             }
 
+            /**
+             * [FIXED] แก้ปัญหา CORS เมื่อเรียก Google Apps Script ตรง ๆ จาก GitHub Pages (Static Hosting)
+             * เดิมใช้ Content-Type: application/json + Header พิเศษ X-API-Key ซึ่งทำให้เบราว์เซอร์ส่ง
+             * Preflight Request (OPTIONS) ไปก่อน แต่ Apps Script ไม่รองรับ OPTIONS จริง ๆ จึงถูกบล็อกด้วย CORS Error
+             * วิธีแก้: ใช้ Content-Type: text/plain และไม่แนบ Header พิเศษ (ส่ง apiKey ไปใน body แทน)
+             * ทำให้เบราว์เซอร์ส่งเป็น "Simple Request" ที่ไม่ต้อง Preflight — ใช้ได้ทันทีบน GitHub Pages
+             *
+             * ข้อยกเว้น: ถ้ามีการตั้งค่า PROXY_URL (เช่น deploy บนโฮสต์ที่รองรับ PHP และใช้ proxy.php)
+             * จะใช้ Header แบบเดิม (application/json + X-API-Key) ได้ตามปกติ เพราะ proxy.php
+             * อยู่ server ฝั่งเดียวกันและตอบ CORS/OPTIONS ได้อย่างสมบูรณ์อยู่แล้ว
+             */
             getHeaders() {
-                const headers = { 'Content-Type': 'application/json' };
-                if (this.config.apiKey) {
-                    headers['X-API-Key'] = this.config.apiKey;
+                if (this.config.proxyUrl) {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (this.config.apiKey) {
+                        headers['X-API-Key'] = this.config.apiKey;
+                    }
+                    return headers;
                 }
-                return headers;
+                // เรียก Google Apps Script ตรง ๆ -> ต้องเป็น Simple Request เท่านั้น
+                return { 'Content-Type': 'text/plain;charset=utf-8' };
+            }
+
+            getEndpoint() {
+                return this.config.proxyUrl || this.config.apiUrl;
             }
 
             async request(action, payload = {}) {
-                if (!this.config.apiUrl || this.config.useMockData) {
+                const endpoint = this.getEndpoint();
+                if (!endpoint || this.config.useMockData) {
                     return null;
                 }
 
                 try {
-                    const response = await fetch(this.config.apiUrl, {
+                    const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: this.getHeaders(),
+                        // apiKey แนบไปใน body เสมอ (ไม่พึ่ง Header) เพื่อให้ทำงานได้ทั้งสองโหมด
                         body: JSON.stringify({ action, payload, apiKey: this.config.apiKey })
                     });
 
