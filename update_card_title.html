@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NRRU Green Point & Carbon Hero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0/dist/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script>
+        window.NRRU_GREEN_CONFIG = window.NRRU_GREEN_CONFIG || {
+            API_URL: 'api/proxy.php',
+            API_KEY: '',
+            USE_MOCK_DATA: false
+        };
+    </script>
+    
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f0fdf4; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white p-1 rounded-xl shadow-sm border border-slate-100 flex items-center justify-center h-10 w-auto">
+                        <img src="logoImage\logo.png" alt="NRRU Library Logo" class="h-8 object-contain" onerror="this.src='https://placehold.co/120x40/ffffff/10b981?text=NRRU+Lib'">
+                    </div>
+                    <span class="font-bold text-lg hidden sm:block text-slate-800 tracking-wide"><span class="text-emerald-600">Green</span> Point</span>
+                </div>
+
+                <!-- Navigation Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Guest View -->
+                    <div id="nav-guest">
+                        <button onclick="showLoginModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-medium transition-colors shadow-md shadow-emerald-500/20 flex items-center">
+                            <i class="fa-solid fa-user-circle mr-2"></i> เข้าสู่ระบบ / สมัคร
+                        </button>
+                    </div>
+
+                    <!-- Logged In View -->
+                    <div id="nav-logged-in" class="hidden items-center space-x-4">
+                        <div class="text-right hidden md:block">
+                            <p class="text-xs text-slate-500">ยินดีต้อนรับ</p>
+                            <p class="text-sm font-bold text-slate-700" id="nav-username">นักศึกษา NRRU</p>
+                        </div>
+                        <div class="h-10 w-10 bg-black rounded-full flex items-center justify-center overflow-hidden border-2 border-emerald-500 shadow-sm">
+                            <img src="logoImage\logo.png" alt="Profile" class="h-full w-full object-cover">
+                        </div>
+                        <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50">
+                            <i class="fa-solid fa-sign-out-alt text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- === PUBLIC DASHBOARD (Hero Section) === -->
+        <div id="publicDashboard" class="block animate-fade-in">
+            
+            <div class="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 rounded-3xl p-8 md:p-12 shadow-2xl text-white relative overflow-hidden mb-10 flex flex-col md:flex-row items-center">
+                <!-- Background Decoration -->
+                <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-teal-400 opacity-20 blur-3xl"></div>
+                
+                <!-- Mascot Image -->
+                <div class="w-full md:w-1/3 flex justify-center mb-8 md:mb-0 relative z-10">
+                    <div class="relative w-48 h-48 md:w-64 md:h-64 animate-float drop-shadow-2xl">
+                        <img src="logoImage\BookBotImage1.png" alt="Bookbot Mascot" class="w-full h-full object-contain drop-shadow-xl rounded-full border-4 border-white/20">
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="w-full md:w-2/3 md:pl-10 relative z-10 text-center md:text-left">
+                    <span class="inline-block py-1 px-3 rounded-full bg-white/20 text-emerald-100 text-xs font-bold tracking-wider mb-4 border border-white/30 backdrop-blur-sm">NRRU GREEN INITIATIVE</span>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-black mb-4 tracking-tight drop-shadow-md leading-tight">
+                        NRRU Library <br>
+                        <span class="text-amber-300">Carbon Hero</span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-emerald-50 mb-8 font-light drop-shadow-sm max-w-2xl">
+                        "ทุกชิ้นที่นำมาส่ง ไม่ใช่แค่ขยะ แต่คือการ<strong class="font-semibold text-white">ลดคาร์บอน</strong>ของมหาวิทยาลัย"
+                    </p>
+                    <button onclick="showLoginModal()" class="bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-3.5 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center justify-center mx-auto md:mx-0">
+                        เริ่มสะสมความดีกันเลย <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- === Highlight Stats (ลดคาร์บอน & Green Point) === -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- CO2 Reduction -->
+                <div class="bg-gradient-to-br from-teal-100 to-teal-200 rounded-3xl p-6 md:p-8 shadow-lg shadow-teal-200/50 border border-teal-300 flex flex-col justify-center items-center text-center relative overflow-hidden group hover:shadow-xl hover:shadow-teal-200/70 transition-all">
+                    <div class="absolute -right-6 -bottom-6 text-teal-300/50 text-9xl z-0 group-hover:scale-110 transition-transform duration-700">
+                        <i class="fa-solid fa-earth-asia"></i>
+                    </div>
+                    <div class="relative z-10 h-16 w-16 bg-white rounded-full flex items-center justify-center text-teal-500 mb-3 group-hover:scale-110 transition-transform text-2xl shadow-sm">
+                        <i class="fa-solid fa-earth-asia"></i>
+                    </div>
+                    <p class="relative z-10 text-base md:text-lg font-bold text-teal-800 mb-2 tracking-wide">Carbon Reduced (CO₂e)</p>
+                    <h3 class="relative z-10 text-5xl md:text-6xl font-black text-teal-700 drop-shadow-sm tracking-tighter"><span id="globalCarbonPoints">0.000</span> <span class="text-xl md:text-2xl font-bold text-teal-600 ml-1 tracking-normal">kg</span></h3>
+                </div>
+
+                <!-- Green Point -->
+                <div class="bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-3xl p-6 md:p-8 shadow-lg shadow-emerald-200/50 border border-emerald-300 flex flex-col justify-center items-center text-center relative overflow-hidden group hover:shadow-xl hover:shadow-emerald-200/70 transition-all">
+                    <div class="absolute -right-6 -bottom-6 text-emerald-300/50 text-9xl z-0 group-hover:scale-110 transition-transform duration-700">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div class="relative z-10 h-16 w-16 bg-white rounded-full flex items-center justify-center text-emerald-500 mb-3 group-hover:scale-110 transition-transform text-2xl shadow-sm">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="relative z-10 text-base md:text-lg font-bold text-emerald-800 mb-2 tracking-wide">Green Point รวมทั้งหมด</p>
+                    <h3 class="relative z-10 text-5xl md:text-6xl font-black text-emerald-700 drop-shadow-sm tracking-tighter"><span id="globalGreenPoints">0</span> <span class="text-xl md:text-2xl font-bold text-emerald-600 ml-1 tracking-normal">Pt</span></h3>
+                </div>
+            </div>
+
+            <!-- === Secondary Stats === -->
+            <div class="grid grid-cols-3 gap-3 md:gap-4 mb-8">
+                <!-- ผู้เข้าร่วม -->
+                <div class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div class="h-8 w-8 md:h-10 md:w-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500 mb-1.5 group-hover:scale-110 transition-transform text-sm md:text-base">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <p class="text-[9px] md:text-[11px] font-semibold text-slate-500 mb-0.5">ผู้เข้าร่วม</p>
+                    <h3 class="text-base md:text-xl font-black text-slate-800"><span id="statParticipants">0</span> <span class="text-[9px] md:text-xs font-normal text-slate-500">คน</span></h3>
+                </div>
+
+                <!-- จำนวนชิ้น -->
+                <div class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div class="h-8 w-8 md:h-10 md:w-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mb-1.5 group-hover:scale-110 transition-transform text-sm md:text-base">
+                        <i class="fa-solid fa-recycle"></i>
+                    </div>
+                    <p class="text-[9px] md:text-[11px] font-semibold text-slate-500 mb-0.5">ของที่ส่งรวม</p>
+                    <h3 class="text-base md:text-xl font-black text-slate-800"><span id="statItems">0</span> <span class="text-[9px] md:text-xs font-normal text-slate-500">ชิ้น</span></h3>
+                </div>
+
+                <!-- น้ำหนักขยะ -->
+                <div class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div class="h-8 w-8 md:h-10 md:w-10 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mb-1.5 group-hover:scale-110 transition-transform text-sm md:text-base">
+                        <i class="fa-solid fa-weight-scale"></i>
+                    </div>
+                    <p class="text-[9px] md:text-[11px] font-semibold text-slate-500 mb-0.5">น้ำหนักสุทธิ</p>
+                    <h3 class="text-base md:text-xl font-black text-slate-800"><span id="statWeight">0</span> <span class="text-[9px] md:text-xs font-normal text-slate-500">kg</span></h3>
+                </div>
+            </div>
+
+            <!-- กราฟระดับพลัง (Life Bar Style) ย้ายมาถัดจากการ์ดด้านบน -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-8 relative overflow-hidden">
+                <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+                    <i class="fa-solid fa-heart-pulse text-rose-500 mr-2 animate-pulse"></i> ระดับพลังรักษ์โลก (Hero Levels)
+                </h3>
+                <div class="space-y-5" id="levelDistributionChart">
+                    <!-- JS Will Populate -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <!-- Waste Breakdown (Donut Chart) -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden flex flex-col h-full">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+                        <i class="fa-solid fa-chart-pie text-blue-500 mr-2"></i> สัดส่วนประเภทขยะ
+                    </h3>
+                    <div class="flex-grow flex flex-col lg:flex-row items-center justify-center gap-6">
+                        <!-- Chart -->
+                        <div class="relative w-52 h-52 md:w-64 md:h-64 rounded-full flex-shrink-0 flex items-center justify-center shadow-lg border border-slate-100 bg-white transition-all duration-500">
+                            <canvas id="wasteDonutChart" class="w-full h-full"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div class="w-32 h-32 md:w-40 md:h-40 bg-white rounded-full flex flex-col items-center justify-center shadow-inner z-10 border border-slate-100">
+                                    <span class="text-[10px] md:text-xs text-slate-500">รวมทั้งหมด</span>
+                                    <span class="text-xl md:text-2xl font-black text-slate-800" id="donutTotal">0</span>
+                                    <span class="text-[10px] text-slate-400">ชิ้น</span>
+                                </div>
+                            </div>
+                            <div id="custom-tooltip" class="pointer-events-none absolute opacity-0 z-[9999] rounded-lg bg-slate-900/95 px-3 py-2 text-white shadow-lg transition-all duration-150">
+                                <div class="text-sm font-semibold" id="tooltip-title"></div>
+                                <div class="text-xs text-slate-300" id="tooltip-body"></div>
+                            </div>
+                        </div>
+                        <!-- Legend -->
+                        <div class="w-full" id="wasteLegend">
+                            <!-- JS Will Populate -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top 5 Faculties -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden h-full">
+                    <div class="absolute -right-4 -top-4 text-slate-50 opacity-80 text-8xl"><i class="fa-solid fa-building-columns"></i></div>
+                    <div class="relative z-10 h-full flex flex-col">
+                        <h3 class="text-lg font-bold mb-4 flex items-center text-slate-800">
+                            <i class="fa-solid fa-crown mr-2 text-amber-500"></i> Top 5 Faculties (คณะยอดเยี่ยม)
+                        </h3>
+                        <div class="space-y-3 flex-grow" id="topFacultyList">
+                            <!-- JS Will Populate -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden mb-10">
+                <div class="relative z-10">
+                    <h3 class="text-lg font-bold mb-4 flex items-center text-slate-800">
+                        <i class="fa-solid fa-graduation-cap mr-2 text-emerald-500"></i> Top 5 Majors (สาขายอดเยี่ยม)
+                    </h3>
+                    <div class="space-y-3" id="majorRankingList">
+                        <!-- JS Will Populate -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center">
+                        <i class="fa-solid fa-rss text-emerald-500 mr-2"></i> กิจกรรมล่าสุด
+                    </h3>
+                    <span class="bg-emerald-100 text-emerald-700 text-xs px-3 py-1 rounded-full font-semibold">Live Updates</span>
+                </div>
+                
+                <div class="space-y-4" id="globalActivityFeed">
+                    <!-- Feed items will be inserted here by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div id="privateDashboard" class="hidden animate-fade-in">
+            
+            <div class="flex items-center space-x-4 mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">แดชบอร์ดของคุณ</h2>
+            </div>
+
+            <!-- Personal Stats & Level -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white rounded-2xl shadow-sm p-5 flex items-center border-l-4 border-emerald-500">
+                    <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mr-4">
+                        <i class="fa-solid fa-star text-emerald-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">Green Point</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="personalGreenPoints">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm p-5 flex items-center border-l-4 border-teal-500">
+                    <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mr-4">
+                        <i class="fa-solid fa-earth-asia text-teal-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">คาร์บอนที่ลดได้</p>
+                        <div class="flex items-baseline space-x-1">
+                            <span id="personalCarbonPoints" class="text-2xl font-bold text-slate-800">0.000</span>
+                            <span class="text-xs text-slate-500">kgCO₂e</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Level / Badge Card -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-sm p-4 flex flex-col justify-between border-l-4 border-amber-400 relative overflow-hidden transform transition hover:-translate-y-1">
+                    <div class="absolute -right-2 -top-2 opacity-20 text-6xl" id="levelBgIcon">🌱</div>
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div>
+                            <p class="text-slate-300 text-xs font-medium">ระดับนักอนุรักษ์ (Badge)</p>
+                            <div class="flex items-baseline space-x-2 mt-1">
+                                <span id="personalLevelIcon" class="text-2xl drop-shadow-md">🌱</span>
+                                <span id="personalLevelName" class="text-lg font-bold text-white tracking-wide">Green Seed</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="relative z-10 mt-1">
+                        <div class="flex justify-between text-[10px] text-slate-400 mb-1.5">
+                            <span id="levelProgressText">0 / 100 Pt</span>
+                            <span id="levelNextText">Next: Green Tree</span>
+                        </div>
+                        <div class="w-full bg-slate-700/50 rounded-full h-2 mb-3 shadow-inner overflow-hidden">
+                            <div id="levelProgressBar" class="bg-gradient-to-r from-amber-300 to-amber-500 h-2 rounded-full transition-all duration-1000 relative" style="width: 0%">
+                                <div class="absolute top-0 right-0 bottom-0 left-0 bg-white/20 animate-pulse"></div>
+                            </div>
+                        </div>
+                        <button onclick="downloadPortfolio()" class="w-full bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white text-xs py-1.5 rounded-lg transition flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-file-pdf text-red-400 mr-2"></i> ใช้เป็น Portfolio (ดาวน์โหลด)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Action Area (Form) -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sticky top-24">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">บันทึกการส่งขยะ</h3>
+                        
+                        <form id="recordForm" onsubmit="submitRecord(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">ประเภทวัสดุรีไซเคิล</label>
+                                <select id="wasteType" required onchange="calculateWeight()" class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500 transition-colors">
+                                    <option value="">-- เลือกประเภท --</option>
+                                    <option value="cap">ฝาขวดน้ำพลาสติก</option>
+                                    <option value="snack">ซองขนมพลาสติก</option>
+                                    <option value="milk">กล่องนม UHT</option>
+                                    <option value="can">กระป๋องอลูมิเนียม</option>
+                                    <option value="pet">ขวด PET (ใส)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">จำนวน (ชิ้น/ใบ)</label>
+                                    <input type="number" id="wasteQty" min="1" required oninput="calculateWeight()" class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500 transition-colors" placeholder="เช่น 10">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                                        น้ำหนักสุทธิ (kg) 
+                                        <span class="text-[10px] font-normal text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded ml-1">แก้ไขได้</span>
+                                    </label>
+                                    <input type="number" id="wasteWeight" min="0.001" step="0.001" required class="w-full rounded-xl border-emerald-300 bg-emerald-50/50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500 transition-colors font-medium text-emerald-700" placeholder="0.000">
+                                </div>
+                            </div>
+                            
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 mt-2 text-sm">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-slate-500">คาดการณ์คะแนน:</span>
+                                    <span class="font-bold text-emerald-600"><span id="previewPt">0</span> Pt</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-500">คาดการณ์ลดคาร์บอน:</span>
+                                    <span class="font-bold text-teal-600"><span id="previewCb">0.000</span> kgCO₂e</span>
+                                </div>
+                            </div>
+
+                            <!-- Image Upload Section -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">แนบรูปภาพหลักฐาน <span class="text-xs text-slate-400 font-normal">(เฉพาะ .jpg, .png)</span></label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:border-emerald-400 transition-colors bg-slate-50 group relative" id="imageUploadBox">
+                                    <div class="space-y-1 text-center" id="uploadPlaceholder">
+                                        <i class="fa-solid fa-camera text-3xl text-slate-400 group-hover:text-emerald-500 mb-2"></i>
+                                        <div class="flex text-sm text-slate-600 justify-center">
+                                            <label for="evidenceImage" class="relative cursor-pointer rounded-md font-medium text-emerald-600 hover:text-emerald-500 focus-within:outline-none">
+                                                <span>อัปโหลดรูปภาพ</span>
+                                                <input id="evidenceImage" name="evidenceImage" type="file" accept=".jpg, .jpeg, .png" class="sr-only" onchange="handleImageUpload(event)">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-slate-500">ถ่ายรูปขยะที่นำมาส่ง</p>
+                                    </div>
+                                    <!-- Image Preview -->
+                                    <div id="imagePreviewContainer" class="hidden absolute inset-0 w-full h-full p-2">
+                                        <div class="relative w-full h-full rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-black/5 flex items-center justify-center">
+                                            <img id="imagePreview" src="" alt="Preview" class="max-w-full max-h-full object-contain">
+                                            <button type="button" onclick="removeImage()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-md">
+                                                <i class="fa-solid fa-xmark text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="imageDataString" value="">
+                            </div>
+
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/30 transition-all hover:-translate-y-0.5 mt-4">
+                                <i class="fa-solid fa-plus-circle mr-2"></i> บันทึกข้อมูล
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i> ประวัติการทำกิจกรรมของคุณ
+                            </h3>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-slate-500 bg-slate-50 uppercase rounded-t-xl">
+                                    <tr>
+                                        <th class="px-3 py-3 rounded-tl-xl">วันที่</th>
+                                        <th class="px-3 py-3 text-center">หลักฐาน</th>
+                                        <th class="px-3 py-3">ประเภท</th>
+                                        <th class="px-3 py-3 text-center">จำนวน/น้ำหนัก</th>
+                                        <th class="px-3 py-3 text-right">Green Pt.</th>
+                                        <th class="px-3 py-3 text-right">Carbon Pt. (kgCO₂)</th>
+                                        <th class="px-3 py-3 text-right rounded-tr-xl">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="personalHistoryTable" class="divide-y divide-slate-100">
+                                    <!-- User history will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="emptyHistoryState" class="py-10 text-center hidden">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-3 text-slate-300">
+                                <i class="fa-solid fa-box-open text-2xl"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium">ยังไม่มีประวัติการทำกิจกรรม</p>
+                            <p class="text-xs text-slate-400 mt-1">มาร่วมรักษ์โลกด้วยการส่งขยะรีไซเคิลกันเถอะ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Authentication Modal -->
+    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="authModalContent">
+            
+            <!-- Modal Header with Mascot -->
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-center relative">
+                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-white/70 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+                <div class="w-20 h-20 mx-auto bg-black rounded-full p-1 shadow-lg mb-3">
+                    <img src="logoImage\BookBotImage1.png" alt="Mascot" class="w-full h-full object-cover rounded-full">
+                </div>
+                <h3 class="text-white font-bold text-xl tracking-wide">เข้าสู่ระบบ / สมัครสมาชิก</h3>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex border-b border-slate-200">
+                <button onclick="switchTab('login')" id="tabLogin" class="flex-1 py-3 text-sm font-bold text-emerald-600 border-b-2 border-emerald-500 transition-colors">เข้าสู่ระบบ</button>
+                <button onclick="switchTab('register')" id="tabRegister" class="flex-1 py-3 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-colors">สมัครสมาชิก</button>
+            </div>
+
+            <div class="p-6">
+                <!-- Login Form -->
+                <form id="loginForm" onsubmit="login(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">อีเมลผู้ใช้งาน</label>
+                        <input type="email" id="loginEmail" required class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="student@nrru.ac.th">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">รหัสผ่าน</label>
+                        <input type="password" required class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors mt-2">
+                        เข้าสู่ระบบ
+                    </button>
+                    <p class="text-xs text-center text-slate-500 mt-4">จำลองการเข้าสู่ระบบ: ใช้อีเมลใดก็ได้เพื่อทดสอบ</p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" onsubmit="register(event)" class="space-y-3 hidden">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อ - นามสกุล</label>
+                            <input type="text" id="regName" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="สมชาย รักษ์โลก">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">รหัสนักศึกษา/สมาชิก</label>
+                            <input type="text" id="regId" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="65xxxxxxx">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">เบอร์โทรศัพท์</label>
+                            <input type="tel" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="08x-xxx-xxxx">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">สาขา/คณะ/หน่วยงาน</label>
+                            <input type="text" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="คณะวิทยาศาสตร์">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">อีเมล (ใช้เป็น User เข้าสู่ระบบ)</label>
+                            <input type="email" id="regEmail" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="email@nrru.ac.th">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่าน</label>
+                            <input type="password" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="ตั้งรหัสผ่าน">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-colors mt-2 text-sm">
+                        สมัครสมาชิก
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const configuredApiUrl = (window.NRRU_GREEN_CONFIG && window.NRRU_GREEN_CONFIG.API_URL) || '';
+        const configuredApiKey = (window.NRRU_GREEN_CONFIG && window.NRRU_GREEN_CONFIG.API_KEY) || '';
+        const useMockData = typeof window.NRRU_GREEN_CONFIG?.USE_MOCK_DATA === 'boolean'
+            ? window.NRRU_GREEN_CONFIG.USE_MOCK_DATA
+            : !configuredApiUrl;
+
+        const APP_CONFIG = {
+            apiUrl: configuredApiUrl,
+            apiKey: configuredApiKey,
+            useMockData
+        };
+
+        class NRRUGreenService {
+            constructor(config) {
+                this.config = config;
+            }
+
+            async testConnection() {
+                if (!this.config.apiUrl) {
+                    return { success: false, message: 'No API URL configured' };
+                }
+
+                try {
+                    const response = await fetch(this.config.apiUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'text/plain' }
+                    });
+                    const text = await response.text();
+                    return {
+                        success: response.ok,
+                        status: response.status,
+                        text
+                    };
+                } catch (error) {
+                    return {
+                        success: false,
+                        message: error.message
+                    };
+                }
+            }
+
+            getHeaders() {
+                const headers = { 'Content-Type': 'application/json' };
+                if (this.config.apiKey) {
+                    headers['X-API-Key'] = this.config.apiKey;
+                }
+                return headers;
+            }
+
+            async request(action, payload = {}) {
+                if (!this.config.apiUrl || this.config.useMockData) {
+                    return null;
+                }
+
+                try {
+                    const isProxyRequest = /proxy\.php$/i.test(this.config.apiUrl);
+                    const requestBody = JSON.stringify({ action, payload, apiKey: this.config.apiKey });
+                    const requestUrl = isProxyRequest
+                        ? `${this.config.apiUrl}?action=${encodeURIComponent(action)}&payload=${encodeURIComponent(JSON.stringify(payload))}&apiKey=${encodeURIComponent(this.config.apiKey || '')}`
+                        : this.config.apiUrl;
+
+                    const response = await fetch(requestUrl, {
+                        method: isProxyRequest ? 'GET' : 'POST',
+                        headers: isProxyRequest ? { Accept: 'application/json' } : this.getHeaders(),
+                        body: isProxyRequest ? undefined : requestBody
+                    });
+
+                    const responseText = await response.text();
+                    let data = null;
+                    try {
+                        data = responseText ? JSON.parse(responseText) : null;
+                    } catch (parseError) {
+                        data = { raw: responseText };
+                    }
+
+                    if (!response.ok) {
+                        const detail = data?.error || data?.message || responseText || 'API request failed';
+                        console.error('API request failed:', { status: response.status, detail });
+                        throw new Error(`API request failed (${response.status}): ${detail}`);
+                    }
+
+                    return data;
+                } catch (error) {
+                    console.warn('API unavailable, falling back to mock data:', error);
+                    return null;
+                }
+            }
+
+            async getDashboardData(userEmail) {
+                return this.request('getDashboardData', { userEmail });
+            }
+
+            async getUserProfile(payload) {
+                return this.request('getUserProfile', payload);
+            }
+
+            async getCarbonHistory(payload) {
+                return this.request('getCarbonHistory', payload);
+            }
+
+            async saveCarbonLog(payload) {
+                return this.request('saveCarbonLog', payload);
+            }
+
+            async updateCarbonLog(payload) {
+                return this.request('updateCarbonLog', payload);
+            }
+
+            async deleteCarbonLog(payload) {
+                return this.request('deleteCarbonLog', payload);
+            }
+
+            async getFacultyRanking(payload) {
+                return this.request('getFacultyRanking', payload);
+            }
+
+            async getMajorRanking(payload) {
+                return this.request('getMajorRanking', payload);
+            }
+        }
+
+        const greenService = new NRRUGreenService(APP_CONFIG);
+
+        let currentUser = null;
+        let currentUserProfile = null;
+        let dashboardData = {
+            userProfile: null,
+            carbonLogs: [],
+            facultyRanking: [],
+            majorRanking: []
+        };
+        let globalRecords = [
+            { id: 1, userMask: 'บุคลากร ***45', type: 'ขวด PET (ใส)', typeId: 'pet', qty: 20, weight: 0.3, point: 30, carbon: 0.690, date: '10 นาทีที่แล้ว', img: '' },
+            { id: 2, userMask: 'สมาชิก NRRU ***12', type: 'กระป๋องอลูมิเนียม', typeId: 'can', qty: 15, weight: 0.225, point: 30, carbon: 2.106, date: '1 ชั่วโมงที่แล้ว', img: '' },
+            { id: 3, userMask: 'สมาชิก NRRU ***89', type: 'กล่องนม UHT', typeId: 'milk', qty: 30, weight: 0.3, point: 30, carbon: 0.225, date: '3 ชั่วโมงที่แล้ว', img: '' },
+        ];
+        let userRecords = [];
+
+        const emissionFactors = {
+            cap: 0.02,
+            snack: 0.02,
+            milk: 0.15,
+            can: 0.20,
+            pet: 0.02
+        };
+
+        const avgWeightPerItem = {
+            cap: 0.005,
+            snack: 0.003,
+            milk: 0.010,
+            can: 0.015,
+            pet: 0.015
+        };
+
+        const typeNames = {
+            cap: 'ฝาขวดน้ำ',
+            snack: 'ซองขนม',
+            milk: 'กล่องนม',
+            can: 'กล่องอลูมิเนียม',
+            pet: 'ขวด PET'
+        };
+
+        let historyFilters = { search: '', filter: 'all' };
+        let currentChartRange = 'day';
+        let chartInstance = null;
+        let wasteChartInstance = null;
+
+        function getEmissionFactor(typeId) {
+            return emissionFactors[typeId] || 0.02;
+        }
+
+        function getWasteLabel(typeId) {
+            return typeNames[typeId] || 'ไม่ระบุ';
+        }
+
+        function calculateCarbonAndGreenPoint(qty, typeId) {
+            const carbonSaved = Number((qty * getEmissionFactor(typeId)).toFixed(3));
+            let greenPoint = Math.round(carbonSaved * 100);
+
+            if (qty >= 50) {
+                greenPoint += 50;
+            } else if (qty >= 25) {
+                greenPoint += 25;
+            } else if (qty >= 10) {
+                greenPoint += 10;
+            }
+
+            return { carbonSaved, greenPoint };
+        }
+
+        function normalizeLogRecord(log, profile) {
+            const typeId = String(log.WasteType || log.typeId || '').toLowerCase();
+            const normalizedType = typeId in typeNames ? typeId : (typeId === 'aluminum' || typeId === 'aluminium' ? 'can' : 'snack');
+            const quantity = Number(log.Quantity || log.qty || 0);
+            const carbonSaved = Number(log.CarbonSaved || log.carbon || 0);
+            const greenPoint = Number(log.GreenPoint || log.point || 0);
+            const dateValue = log.DateTime || log.date || new Date().toISOString();
+            const safeProfile = profile || currentUserProfile || {};
+
+            return {
+                id: log.LogID || log.id,
+                typeId: normalizedType,
+                type: getWasteLabel(normalizedType),
+                qty: quantity,
+                weight: Number((quantity * avgWeightPerItem[normalizedType] || 0).toFixed(3)),
+                point: greenPoint,
+                carbon: carbonSaved,
+                date: formatDisplayDate(dateValue),
+                dateTime: dateValue,
+                img: log.ImageURL || log.img || '',
+                username: safeProfile.Username || safeProfile.name || currentUser?.name || 'คุณ',
+                status: log.Status || 'Pending'
+            };
+        }
+
+        function formatDisplayDate(dateValue) {
+            if (!dateValue) return 'ไม่ระบุ';
+            const date = new Date(dateValue);
+            if (Number.isNaN(date.getTime())) return dateValue;
+            return date.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+        }
+
+        function ensureDashboardSections() {
+            const privateDashboard = document.getElementById('privateDashboard');
+            if (!privateDashboard) return;
+
+            if (!document.getElementById('historyControls')) {
+                const historyWrapper = document.querySelector('#personalHistoryTable')?.closest('.overflow-x-auto');
+                if (historyWrapper) {
+                    historyWrapper.insertAdjacentHTML('beforebegin', `
+                        <div id="historyControls" class="mb-4 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                            <div class="flex-1">
+                                <input id="historySearch" type="text" placeholder="ค้นหาประวัติ..." class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                            </div>
+                            <div class="min-w-[180px]">
+                                <select id="historyFilter" class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                    <option value="all">ทุกประเภท</option>
+                                    <option value="snack">ซองขนม</option>
+                                    <option value="milk">กล่องนม</option>
+                                    <option value="can">กล่องอลูมิเนียม</option>
+                                    <option value="cap">ฝาขวดน้ำ</option>
+                                    <option value="pet">ขวด PET</option>
+                                </select>
+                            </div>
+                        </div>
+                    `);
+                    document.getElementById('historySearch').addEventListener('input', () => {
+                        historyFilters.search = document.getElementById('historySearch').value.trim().toLowerCase();
+                        updatePersonalDashboard();
+                    });
+                    document.getElementById('historyFilter').addEventListener('change', () => {
+                        historyFilters.filter = document.getElementById('historyFilter').value;
+                        updatePersonalDashboard();
+                    });
+                }
+            }
+
+            if (!document.getElementById('dashboardInsights')) {
+                const mainGrid = document.querySelector('#privateDashboard > .grid.grid-cols-1.lg\\:grid-cols-3.gap-6');
+                if (mainGrid) {
+                    mainGrid.insertAdjacentHTML('beforebegin', `
+                        <div id="dashboardInsights" class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-bold text-slate-800 flex items-center"><i class="fa-solid fa-chart-line text-emerald-500 mr-2"></i> กราฟลดคาร์บอน</h3>
+                                    <div class="inline-flex rounded-full bg-slate-100 p-1">
+                                        <button onclick="setChartRange('day')" class="px-3 py-1 rounded-full text-sm ${currentChartRange === 'day' ? 'bg-emerald-600 text-white' : 'text-slate-600'}">วัน</button>
+                                        <button onclick="setChartRange('week')" class="px-3 py-1 rounded-full text-sm ${currentChartRange === 'week' ? 'bg-emerald-600 text-white' : 'text-slate-600'}">สัปดาห์</button>
+                                        <button onclick="setChartRange('month')" class="px-3 py-1 rounded-full text-sm ${currentChartRange === 'month' ? 'bg-emerald-600 text-white' : 'text-slate-600'}">เดือน</button>
+                                    </div>
+                                </div>
+                                <div class="h-72"><canvas id="carbonChart"></canvas></div>
+                            </div>
+                            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-bold text-slate-800 flex items-center"><i class="fa-solid fa-clock-rotate-left text-emerald-500 mr-2"></i> กิจกรรมล่าสุด</h3>
+                                    <span class="text-xs text-slate-500">10 รายการล่าสุด</span>
+                                </div>
+                                <div id="recentActivities" class="space-y-3 max-h-[320px] overflow-y-auto pr-1"></div>
+                            </div>
+                        </div>
+                    `);
+                }
+            }
+
+            if (!document.getElementById('editActionBar')) {
+                const form = document.getElementById('recordForm');
+                if (form) {
+                    const editBar = document.createElement('div');
+                    editBar.id = 'editActionBar';
+                    editBar.className = 'hidden items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700';
+                    editBar.innerHTML = `
+                        <span><i class="fa-solid fa-pen-to-square mr-2"></i>กำลังแก้ไขบันทึก</span>
+                        <button type="button" onclick="cancelEditRecord()" class="text-xs font-semibold text-amber-700 hover:text-amber-800">ยกเลิก</button>
+                    `;
+                    form.insertBefore(editBar, form.querySelector('button[type="submit"]'));
+                    form.insertAdjacentHTML('beforeend', '<input type="hidden" id="editingLogId" value="">');
+                }
+            }
+        }
+
+        function setChartRange(range) {
+            currentChartRange = range;
+            renderCarbonChart();
+        }
+
+        // --- เริ่มต้นการทำงาน (Initialization) ---
+        window.onload = async function() {
+            ensureDashboardSections();
+            await initializeApp();
+        };
+
+        async function initializeApp() {
+            await loadDashboardData();
+            updateGlobalStats();
+            updatePersonalDashboard();
+            renderCarbonChart();
+            renderRankings();
+        }
+
+        // --- ระบบ Authentication UI ---
+        function showLoginModal() {
+            const modal = document.getElementById('authModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('authModalContent').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeLoginModal() {
+            const modal = document.getElementById('authModal');
+            modal.classList.add('opacity-0');
+            document.getElementById('authModalContent').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function switchTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                
+                tabLogin.classList.replace('text-slate-400', 'text-emerald-600');
+                tabLogin.classList.replace('border-transparent', 'border-emerald-500');
+                tabLogin.classList.replace('font-medium', 'font-bold');
+                
+                tabRegister.classList.replace('text-emerald-600', 'text-slate-400');
+                tabRegister.classList.replace('border-emerald-500', 'border-transparent');
+                tabRegister.classList.replace('font-bold', 'font-medium');
+            } else {
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                
+                tabRegister.classList.replace('text-slate-400', 'text-emerald-600');
+                tabRegister.classList.replace('border-transparent', 'border-emerald-500');
+                tabRegister.classList.replace('font-medium', 'font-bold');
+                
+                tabLogin.classList.replace('text-emerald-600', 'text-slate-400');
+                tabLogin.classList.replace('border-emerald-500', 'border-transparent');
+                tabLogin.classList.replace('font-bold', 'font-medium');
+            }
+        }
+
+        function showMessage(title, subtitle) {
+            const msgBox = document.createElement('div');
+            msgBox.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[150] animate-fade-in flex items-center border border-slate-700';
+            msgBox.innerHTML = `
+                <div class="h-10 w-10 bg-emerald-500/20 rounded-full flex items-center justify-center mr-4 text-emerald-400">
+                    <i class="fa-solid fa-check text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm">${title}</h4>
+                    <p class="text-xs text-slate-300">${subtitle}</p>
+                </div>
+            `;
+            document.body.appendChild(msgBox);
+            setTimeout(() => {
+                msgBox.classList.add('opacity-0', 'transition-opacity', 'duration-500', 'transform', '-translate-y-4');
+                setTimeout(() => msgBox.remove(), 500);
+            }, 3000);
+        }
+
+        async function login(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const mockName = email.split('@')[0];
+            
+            currentUser = {
+                name: mockName,
+                email: email
+            };
+            await completeAuth(currentUser.name);
+        }
+
+        async function register(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            
+            currentUser = {
+                name: name,
+                email: email
+            };
+            await completeAuth(currentUser.name);
+        }
+        
+        async function completeAuth(displayName) {
+            closeLoginModal();
+            document.getElementById('nav-guest').classList.add('hidden');
+            document.getElementById('nav-logged-in').classList.remove('hidden');
+            document.getElementById('nav-logged-in').classList.add('flex');
+            
+            document.getElementById('nav-username').textContent = displayName;
+            
+            document.getElementById('privateDashboard').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('privateDashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+
+            await loadDashboardData();
+            updatePersonalDashboard();
+            updateGlobalStats();
+            renderCarbonChart();
+            renderRankings();
+
+            showMessage('ยินดีต้อนรับเข้าสู่ระบบ', `คุณ ${displayName} เริ่มสะสมความดีได้เลย!`);
+        }
+
+        function logout() {
+            currentUser = null;
+            currentUserProfile = null;
+            dashboardData = { userProfile: null, carbonLogs: [], facultyRanking: [], majorRanking: [] };
+            userRecords = [];
+            
+            document.getElementById('nav-guest').classList.remove('hidden');
+            document.getElementById('nav-logged-in').classList.add('hidden');
+            document.getElementById('nav-logged-in').classList.remove('flex');
+            document.getElementById('privateDashboard').classList.add('hidden');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            updatePersonalDashboard();
+            updateGlobalStats();
+            showMessage('ออกจากระบบเรียบร้อย', 'แล้วพบกันใหม่ Carbon Hero!');
+        }
+
+        // --- จัดการรูปภาพ ---
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        }
+                    } else {
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    document.getElementById('imageDataString').value = dataUrl;
+                    document.getElementById('imagePreview').src = dataUrl;
+                    document.getElementById('uploadPlaceholder').classList.add('hidden');
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                    document.getElementById('imagePreviewContainer').classList.add('flex');
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            document.getElementById('evidenceImage').value = '';
+            document.getElementById('imageDataString').value = '';
+            document.getElementById('imagePreview').src = '';
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('imagePreviewContainer').classList.remove('flex');
+        }
+
+        // --- ระบบคำนวณและประมวลผล ---
+        function calculateWeight() {
+            const type = document.getElementById('wasteType').value;
+            const qtyStr = document.getElementById('wasteQty').value;
+            
+            if(!type || !qtyStr) {
+                document.getElementById('previewPt').textContent = "0";
+                document.getElementById('previewCb').textContent = "0.000";
+                return;
+            }
+
+            const qty = parseInt(qtyStr);
+            if(qty <= 0) return;
+
+            const estWeight = qty * avgWeightPerItem[type];
+            document.getElementById('wasteWeight').value = estWeight.toFixed(3);
+
+            calculatePreview();
+        }
+
+        function calculatePreview() {
+            const type = document.getElementById('wasteType').value;
+            const qtyStr = document.getElementById('wasteQty').value;
+            const weightStr = document.getElementById('wasteWeight').value;
+
+            if(!type || !qtyStr || !weightStr) return;
+
+            const qty = parseInt(qtyStr);
+            const weight = parseFloat(weightStr);
+            const { carbonSaved, greenPoint } = calculateCarbonAndGreenPoint(qty, type);
+
+            document.getElementById('previewPt').textContent = greenPoint.toLocaleString();
+            document.getElementById('previewCb').textContent = carbonSaved.toFixed(3);
+            if (weight <= 0) {
+                document.getElementById('wasteWeight').value = (qty * avgWeightPerItem[type]).toFixed(3);
+            }
+        }
+
+        document.getElementById('wasteWeight').addEventListener('input', calculatePreview);
+
+        async function submitRecord(e) {
+            e.preventDefault();
+            
+            const typeId = document.getElementById('wasteType').value;
+            const qty = parseInt(document.getElementById('wasteQty').value);
+            const weight = parseFloat(document.getElementById('wasteWeight').value);
+            const imgData = document.getElementById('imageDataString').value;
+            const editingLogId = document.getElementById('editingLogId').value;
+
+            if(!typeId || !qty || !weight) {
+                showMessage('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกประเภทและจำนวนก่อนบันทึก');
+                return;
+            }
+
+            const { carbonSaved, greenPoint } = calculateCarbonAndGreenPoint(qty, typeId);
+
+            if(editingLogId) {
+                const payload = {
+                    logId: editingLogId,
+                    userEmail: currentUser?.email,
+                    wasteType: typeId,
+                    quantity: qty,
+                    carbonSaved,
+                    greenPoint,
+                    imageUrl: imgData,
+                    status: 'Approved'
+                };
+                const result = await greenService.updateCarbonLog(payload);
+                if (result && result.success) {
+                    showMessage('อัปเดตสำเร็จ', 'บันทึกการส่งขยะถูกอัปเดตเรียบร้อย');
+                } else {
+                    const target = userRecords.find(item => String(item.id) === String(editingLogId));
+                    if (target) {
+                        target.typeId = typeId;
+                        target.type = getWasteLabel(typeId);
+                        target.qty = qty;
+                        target.weight = Number(weight.toFixed(3));
+                        target.point = greenPoint;
+                        target.carbon = carbonSaved;
+                        target.img = imgData;
+                        target.date = formatDisplayDate(new Date().toISOString());
+                    }
+                    showMessage('อัปเดตสำเร็จ', 'บันทึกการส่งขยะถูกอัปเดตเรียบร้อย');
+                }
+            } else {
+                const payload = {
+                    userEmail: currentUser?.email,
+                    wasteType: typeId,
+                    quantity: qty,
+                    carbonSaved,
+                    greenPoint,
+                    imageUrl: imgData,
+                    status: 'Approved'
+                };
+                const result = await greenService.saveCarbonLog(payload);
+                if (result && result.success) {
+                    showMessage('บันทึกสำเร็จ!', `ได้รับ ${greenPoint} Green Pt. และช่วยลดคาร์บอน ${carbonSaved.toFixed(3)} kgCO₂`);
+                } else {
+                    const newRecord = {
+                        id: Date.now(),
+                        userMask: currentUser?.name || 'คุณ',
+                        typeId,
+                        type: getWasteLabel(typeId),
+                        qty,
+                        weight: Number(weight.toFixed(3)),
+                        point: greenPoint,
+                        carbon: carbonSaved,
+                        date: 'เมื่อสักครู่',
+                        img: imgData,
+                        dateTime: new Date().toISOString(),
+                        username: currentUser?.name || 'คุณ',
+                        status: 'Approved'
+                    };
+                    userRecords.unshift(newRecord);
+                    globalRecords.unshift({ ...newRecord, userMask: 'รายการของคุณ (You)' });
+                    showMessage('บันทึกสำเร็จ!', `ได้รับ ${greenPoint} Green Pt. และช่วยลดคาร์บอน ${carbonSaved.toFixed(3)} kgCO₂`);
+                }
+            }
+
+            await loadDashboardData();
+            updatePersonalDashboard();
+            updateGlobalStats();
+            renderCarbonChart();
+            renderRankings();
+            
+            e.target.reset();
+            removeImage();
+            document.getElementById('previewPt').textContent = "0";
+            document.getElementById('previewCb').textContent = "0.000";
+            document.getElementById('editingLogId').value = '';
+            const editBar = document.getElementById('editActionBar');
+            if (editBar) editBar.classList.add('hidden');
+        }
+
+        function startEditRecord(logId) {
+            const target = userRecords.find(item => String(item.id) === String(logId));
+            if (!target) return;
+            document.getElementById('wasteType').value = target.typeId;
+            document.getElementById('wasteQty').value = target.qty;
+            document.getElementById('wasteWeight').value = target.weight.toFixed(3);
+            document.getElementById('editingLogId').value = target.id;
+            document.getElementById('imageDataString').value = target.img || '';
+            document.getElementById('imagePreview').src = target.img || '';
+            document.getElementById('uploadPlaceholder').classList.add('hidden');
+            document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            document.getElementById('imagePreviewContainer').classList.add('flex');
+            calculatePreview();
+            const editBar = document.getElementById('editActionBar');
+            if (editBar) editBar.classList.remove('hidden');
+            document.getElementById('privateDashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function deleteLogRecord(logId) {
+            const confirmed = window.confirm('ต้องการลบบันทึกนี้ใช่หรือไม่');
+            if (!confirmed) return;
+            const payload = { logId, userEmail: currentUser?.email };
+            const result = await greenService.deleteCarbonLog(payload);
+            if (result && result.success) {
+                showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
+            } else {
+                userRecords = userRecords.filter(item => String(item.id) !== String(logId));
+                globalRecords = globalRecords.filter(item => String(item.id) !== String(logId));
+                showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
+            }
+            await loadDashboardData();
+            updatePersonalDashboard();
+            updateGlobalStats();
+            renderCarbonChart();
+            renderRankings();
+        }
+
+        function updatePersonalDashboard() {
+            const tableBody = document.getElementById('personalHistoryTable');
+            const emptyState = document.getElementById('emptyHistoryState');
+            
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+            
+            let totalPt = 0;
+            let totalCb = 0;
+            const profileTotalPt = Number(currentUserProfile?.TotalGreenPoint || 0);
+            const profileTotalCb = Number(currentUserProfile?.TotalCarbonSaved || 0);
+            const visibleRecords = userRecords.filter(record => {
+                const searchText = `${record.type || ''} ${record.username || ''}`.toLowerCase();
+                const matchesSearch = historyFilters.search ? searchText.includes(historyFilters.search) : true;
+                const matchesFilter = historyFilters.filter === 'all' || record.typeId === historyFilters.filter;
+                return matchesSearch && matchesFilter;
+            });
+
+            if(visibleRecords.length === 0) {
+                emptyState.classList.remove('hidden');
+                document.getElementById('personalGreenPoints').textContent = profileTotalPt.toLocaleString();
+                document.getElementById('personalCarbonPoints').textContent = profileTotalCb.toFixed(3);
+                updateLevelBadge(profileTotalPt);
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            visibleRecords.forEach(r => {
+                totalPt += r.point || 0;
+                totalCb += r.carbon || 0;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors group';
+                
+                let imgHtml = '<div class="w-8 h-8 rounded bg-slate-100 mx-auto flex items-center justify-center text-slate-300 text-xs"><i class="fa-solid fa-image"></i></div>';
+                if(r.img) {
+                    imgHtml = `<img src="${r.img}" class="w-8 h-8 object-cover rounded shadow-sm mx-auto border border-slate-200 group-hover:scale-150 group-hover:shadow-md transition-transform transform origin-center z-10 relative">`;
+                }
+
+                tr.innerHTML = `
+                    <td class="px-3 py-2 text-slate-500 whitespace-nowrap">${r.date}</td>
+                    <td class="px-3 py-2 text-center">${imgHtml}</td>
+                    <td class="px-3 py-2 font-medium text-slate-700">${r.type}</td>
+                    <td class="px-3 py-2 text-center text-slate-600">${r.qty} ชิ้น <br><span class="text-[10px] text-slate-400">(${(r.weight || 0).toFixed(3)} kg)</span></td>
+                    <td class="px-3 py-2 text-right font-bold text-emerald-600">+${r.point || 0}</td>
+                    <td class="px-3 py-2 text-right font-bold text-teal-600">+${(r.carbon || 0).toFixed(3)}</td>
+                    <td class="px-3 py-2 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button type="button" onclick="startEditRecord('${r.id}')" class="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-amber-600 hover:bg-amber-100"><i class="fa-solid fa-pen"></i></button>
+                            <button type="button" onclick="deleteLogRecord('${r.id}')" class="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-rose-600 hover:bg-rose-100"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            document.getElementById('personalGreenPoints').textContent = (profileTotalPt || totalPt).toLocaleString();
+            document.getElementById('personalCarbonPoints').textContent = (profileTotalCb || totalCb).toFixed(3);
+            
+            updateLevelBadge(profileTotalPt || totalPt);
+            renderRecentActivities();
+        }
+
+        function updateLevelBadge(points) {
+            let levelName = 'Green Seed';
+            let icon = '🌱';
+            let min = 0;
+            let max = 100;
+            let nextLevel = 'Green Tree';
+            let progress = 0;
+
+            if (points <= 100) {
+                levelName = 'Green Seed'; icon = '🌱'; min = 0; max = 100; nextLevel = 'Green Tree';
+            } else if (points <= 300) {
+                levelName = 'Green Tree'; icon = '🌿'; min = 101; max = 300; nextLevel = 'Green Hero';
+            } else if (points <= 700) {
+                levelName = 'Green Hero'; icon = '🌳'; min = 301; max = 700; nextLevel = 'Green Champion';
+            } else {
+                levelName = 'Green Champion'; icon = '🏆'; min = 701; max = points; nextLevel = 'MAX LEVEL';
+            }
+
+            if (levelName === 'Green Champion') {
+                progress = 100;
+            } else {
+                let range = max - min + 1;
+                let current = points - min;
+                if (current < 0) current = 0;
+                progress = (current / range) * 100;
+            }
+
+            document.getElementById('personalLevelName').textContent = levelName;
+            document.getElementById('personalLevelIcon').textContent = icon;
+            document.getElementById('levelBgIcon').textContent = icon;
+            
+            if (levelName === 'Green Champion') {
+                document.getElementById('levelProgressText').textContent = `${points.toLocaleString()} Pt`;
+                document.getElementById('levelNextText').textContent = 'ตำแหน่งสูงสุด!';
+            } else {
+                document.getElementById('levelProgressText').textContent = `${points.toLocaleString()} / ${max.toLocaleString()} Pt`;
+                document.getElementById('levelNextText').textContent = `Next: ${nextLevel}`;
+            }
+            
+            document.getElementById('levelProgressBar').style.width = `${progress}%`;
+        }
+
+        function downloadPortfolio() {
+            const msgBox = document.createElement('div');
+            msgBox.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-8 py-6 rounded-2xl shadow-2xl z-[150] animate-fade-in flex flex-col items-center border border-slate-700 w-80 text-center';
+            
+            const pt = document.getElementById('personalGreenPoints').textContent;
+            const cb = document.getElementById('personalCarbonPoints').textContent;
+            const lvl = document.getElementById('personalLevelName').textContent;
+            const icon = document.getElementById('personalLevelIcon').textContent;
+            
+            const userNameEl = document.querySelector('#nav-username');
+            const userName = userNameEl ? userNameEl.textContent : 'นักศึกษา NRRU';
+
+            msgBox.innerHTML = `
+                <div class="text-5xl mb-3 drop-shadow-lg scale-110">${icon}</div>
+                <h4 class="font-bold text-xl mb-1 text-emerald-400 tracking-wide">Certificate of Impact</h4>
+                <p class="text-xs mb-4 text-slate-300">NRRU Library Carbon Hero</p>
+                
+                <div class="bg-slate-800 p-4 rounded-xl w-full text-sm border border-slate-700 mb-4 shadow-inner">
+                    <p class="text-slate-400 mb-1 text-[11px]">มอบให้เพื่อแสดงว่า</p>
+                    <p class="text-lg font-bold text-white mb-3 truncate">${userName}</p>
+                    <div class="grid grid-cols-2 gap-2 text-left">
+                        <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-700">
+                            <div class="text-[10px] text-slate-400 mb-0.5">ระดับ (Badge)</div>
+                            <div class="font-bold text-amber-400">${lvl}</div>
+                        </div>
+                        <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-700">
+                            <div class="text-[10px] text-slate-400 mb-0.5">ลดคาร์บอน (CO₂)</div>
+                            <div class="font-bold text-teal-400">${cb} kg</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-1 mb-2">
+                    <div class="bg-emerald-500 h-1 rounded-full animate-pulse" style="width: 100%"></div>
+                </div>
+                <p class="text-[11px] text-emerald-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> ระบบกำลังสร้างเอกสาร Portfolio...</p>
+            `;
+            document.body.appendChild(msgBox);
+            
+            setTimeout(() => {
+                msgBox.classList.add('opacity-0', 'transition-opacity', 'duration-500', 'transform', '-translate-y-4');
+                setTimeout(() => msgBox.remove(), 500);
+            }, 5000);
+        }
+
+        async function loadDashboardData() {
+            if (!currentUser?.email) {
+                userRecords = [];
+                currentUserProfile = null;
+                return;
+            }
+
+            const result = await greenService.getDashboardData(currentUser.email);
+            if (result && result.success) {
+                dashboardData = {
+                    userProfile: result.userProfile || result.profile || null,
+                    carbonLogs: result.carbonLogs || [],
+                    facultyRanking: result.facultyRanking || [],
+                    majorRanking: result.majorRanking || []
+                };
+                currentUserProfile = dashboardData.userProfile;
+                userRecords = (dashboardData.carbonLogs || []).map(log => normalizeLogRecord(log, dashboardData.userProfile));
+                const fallbackRecords = [...globalRecords.filter(item => item.userMask !== 'รายการของคุณ (You)')];
+                globalRecords = [
+                    ...userRecords.slice(0, 5).map(record => ({ ...record, userMask: 'รายการของคุณ (You)' })),
+                    ...fallbackRecords.slice(0, 5)
+                ];
+                if (dashboardData.facultyRanking?.length) {
+                    globalRecords = [...globalRecords, ...dashboardData.facultyRanking.slice(0, 3).map((item, index) => ({
+                        id: 1000 + index,
+                        userMask: item.Faculty || item.name || 'Faculty',
+                        type: 'Faculty Rank',
+                        typeId: 'cap',
+                        qty: 0,
+                        weight: 0,
+                        point: item.TotalGreenPoint || 0,
+                        carbon: 0,
+                        date: 'Ranking',
+                        img: ''
+                    }))];
+                }
+            } else {
+                currentUserProfile = {
+                    Username: currentUser?.name || 'คุณ',
+                    Faculty: 'คณะวิทยาศาสตร์',
+                    Major: 'CS',
+                    TotalGreenPoint: 0,
+                    TotalCarbonSaved: 0,
+                    JoinDate: new Date().toISOString(),
+                    LastActive: new Date().toISOString()
+                };
+                dashboardData.userProfile = currentUserProfile;
+                userRecords = [];
+            }
+        }
+
+        function updateGlobalStats() {
+            let totalGlobalPt = 0;
+            let totalGlobalCb = 0;
+            let totalGlobalQty = 0;
+            let totalGlobalWeight = 0;
+            
+            const feedContainer = document.getElementById('globalActivityFeed');
+            if (feedContainer) feedContainer.innerHTML = '';
+
+            globalRecords.forEach(r => {
+                totalGlobalPt += r.point || 0;
+                totalGlobalCb += r.carbon || 0;
+                totalGlobalQty += r.qty || 0;
+                totalGlobalWeight += r.weight || 0;
+            });
+
+            const displayRecords = globalRecords.slice(0, 5);
+
+            displayRecords.forEach(r => {
+                let icon = 'fa-box';
+                let colorClass = 'text-slate-400 bg-slate-100';
+                if(r.typeId === 'pet' || r.typeId === 'cap') { icon = 'fa-bottle-water'; colorClass = 'text-blue-500 bg-blue-50'; }
+                else if(r.typeId === 'can') { icon = 'fa-prescription-bottle'; colorClass = 'text-amber-500 bg-amber-50'; }
+                else if(r.typeId === 'milk') { icon = 'fa-box-open'; colorClass = 'text-orange-500 bg-orange-50'; }
+                else if(r.typeId === 'snack') { icon = 'fa-cookie'; colorClass = 'text-purple-500 bg-purple-50'; }
+
+                let imgBadge = '';
+                if(r.img) {
+                    imgBadge = `<div class="ml-2 px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 border border-slate-200 inline-flex items-center"><i class="fa-solid fa-image mr-1"></i>มีรูปภาพ</div>`;
+                }
+
+                const avatarColors = ['bg-rose-100 text-rose-500 border-rose-200', 'bg-indigo-100 text-indigo-500 border-indigo-200', 'bg-amber-100 text-amber-500 border-amber-200'];
+                const avatarStyle = avatarColors[r.id % avatarColors.length];
+
+                const isMe = r.userMask === 'รายการของคุณ (You)';
+                const itemClass = isMe ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-100 hover:bg-slate-50';
+
+                const html = `
+                    <div class="flex items-start p-4 border rounded-2xl transition-colors ${itemClass}">
+                        <div class="h-10 w-10 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-sm border-2 ${isMe ? 'bg-emerald-100 text-emerald-600 border-emerald-500 overflow-hidden' : avatarStyle}">
+                            ${isMe ? '<img src="New Masqot.jpg" class="w-full h-full object-cover">' : '<i class="fa-solid fa-user"></i>'}
+                        </div>
+                        <div class="ml-4 flex-grow">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800">${r.userMask}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">ส่ง ${r.type} ${r.qty} ชิ้น ${imgBadge}</p>
+                                </div>
+                                <span class="text-[10px] text-slate-400 whitespace-nowrap ml-2"><i class="fa-regular fa-clock mr-1"></i>${r.date}</span>
+                            </div>
+                            <div class="mt-2 flex space-x-3">
+                                <span class="inline-flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                                    <i class="fa-solid fa-star mr-1"></i> +${r.point} Pt
+                                </span>
+                                <span class="inline-flex items-center text-xs font-medium text-teal-600 bg-teal-50 px-2.5 py-1 rounded-full border border-teal-100">
+                                    <i class="fa-solid fa-earth-asia mr-1"></i> -${r.carbon.toFixed(3)} kgCO₂e
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                feedContainer.insertAdjacentHTML('beforeend', html);
+            });
+
+            document.getElementById('statParticipants').textContent = "158";
+            document.getElementById('statItems').textContent = totalGlobalQty.toLocaleString();
+            document.getElementById('statWeight').textContent = totalGlobalWeight.toFixed(2);
+            document.getElementById('globalCarbonPoints').textContent = totalGlobalCb.toFixed(3);
+            document.getElementById('globalGreenPoints').textContent = totalGlobalPt.toLocaleString();
+
+            renderLeaderboards();
+            renderWasteChart();
+            renderLevelChart();
+        }
+
+        function renderRecentActivities() {
+            const container = document.getElementById('recentActivities');
+            if (!container) return;
+            const logs = [...userRecords].slice(0, 10);
+            container.innerHTML = logs.length ? logs.map(log => `
+                <div class="rounded-2xl border border-slate-100 p-3 bg-slate-50/70">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="font-semibold text-slate-700">${log.username || 'คุณ'}</div>
+                        <div class="text-[11px] text-slate-400">${log.date}</div>
+                    </div>
+                    <div class="text-sm text-slate-600">${log.type} • ${log.qty} ชิ้น</div>
+                    <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
+                        <span class="text-emerald-600 font-semibold">Green Point +${log.point || 0}</span>
+                        <span class="text-teal-600 font-semibold">Carbon ${Number(log.carbon || 0).toFixed(3)} kg</span>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-sm text-slate-500">ยังไม่มีข้อมูล</div>';
+        }
+
+        function renderCarbonChart() {
+            const canvas = document.getElementById('carbonChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            const labels = [];
+            const data = [];
+            const records = [...userRecords].sort((a, b) => new Date(a.dateTime || a.date) - new Date(b.dateTime || b.date));
+            const grouped = {};
+            records.forEach(record => {
+                const d = new Date(record.dateTime || record.date);
+                let key = '';
+                if (currentChartRange === 'day') {
+                    key = d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+                } else if (currentChartRange === 'week') {
+                    key = `สัปดาห์ ${Math.ceil((d.getDate() + 6) / 7)}`;
+                } else {
+                    key = d.toLocaleDateString('th-TH', { month: 'short', year: 'numeric' });
+                }
+                grouped[key] = (grouped[key] || 0) + (record.carbon || 0);
+            });
+            Object.keys(grouped).forEach(key => {
+                labels.push(key);
+                data.push(grouped[key]);
+            });
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Carbon Saved (kg)',
+                        data,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
+                    scales: { y: { beginAtZero: true } },
+                    zoom: { pan: { enabled: true, mode: 'x' }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' } }
+                },
+                plugins: [ChartZoom]
+            });
+        }
+
+        function renderRankings() {
+            const facultyContainer = document.getElementById('topFacultyList');
+            if (!facultyContainer) return;
+            const facultyData = [...(dashboardData.facultyRanking || [])].sort((a, b) => (b.TotalGreenPoint || 0) - (a.TotalGreenPoint || 0));
+            const majorData = [...(dashboardData.majorRanking || [])].sort((a, b) => (b.TotalGreenPoint || 0) - (a.TotalGreenPoint || 0));
+            facultyContainer.innerHTML = facultyData.slice(0, 5).map((faculty, index) => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl ${index === 0 ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100' : 'bg-slate-50 hover:bg-slate-100 border border-slate-100'} transition-colors group">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full ${index === 0 ? 'bg-gradient-to-br from-amber-300 to-amber-500 text-amber-900' : index === 1 ? 'bg-slate-200 text-slate-700' : index === 2 ? 'bg-orange-200 text-orange-800' : 'bg-white text-slate-500 border border-slate-200'} font-bold flex items-center justify-center text-sm mr-3 shadow-sm group-hover:scale-110 transition-transform">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold ${index === 0 ? 'text-amber-700' : 'text-slate-700'}">${faculty.Faculty || faculty.name || 'ไม่ระบุ'}</p>
+                            <p class="text-[10px] ${index === 0 ? 'text-amber-600/70' : 'text-slate-500'}"><i class="fa-solid fa-users mr-1 opacity-70"></i> ${faculty.MemberCount || faculty.students || 0} คนเข้าร่วม</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black ${index === 0 ? 'text-amber-600' : 'text-emerald-600'}">${Number(faculty.TotalGreenPoint || 0).toLocaleString()} <span class="text-[10px] font-normal opacity-50">Pt</span></p>
+                    </div>
+                </div>
+            `).join('');
+            const majorContainer = document.getElementById('majorRankingList');
+            if (majorContainer) {
+                majorContainer.innerHTML = majorData.slice(0, 5).map((major, index) => `
+                    <div class="flex items-center justify-between p-2.5 rounded-xl ${index === 0 ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100' : 'bg-slate-50 hover:bg-slate-100 border border-slate-100'} transition-colors group">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full ${index === 0 ? 'bg-gradient-to-br from-emerald-300 to-emerald-500 text-emerald-900' : 'bg-white text-slate-500 border border-slate-200'} font-bold flex items-center justify-center text-sm mr-3 shadow-sm group-hover:scale-110 transition-transform">
+                                ${index + 1}
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-700">${major.Major || major.name || 'ไม่ระบุ'}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-black text-emerald-600">${Number(major.TotalGreenPoint || 0).toLocaleString()} <span class="text-[10px] font-normal opacity-50">Pt</span></p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderWasteChart() {
+            const stats = { pet: 1200, can: 800, milk: 650, snack: 450, cap: 400 };
+            
+            globalRecords.forEach(r => {
+                if(stats[r.typeId] !== undefined) {
+                    stats[r.typeId] += r.qty;
+                }
+            });
+
+            const total = Object.values(stats).reduce((a, b) => a + b, 0);
+            document.getElementById('donutTotal').textContent = total.toLocaleString();
+
+            const types = [
+                { id: 'pet', name: 'ขวด PET', color: '#10b981', dotClass: 'bg-emerald-500' },
+                { id: 'can', name: 'กระป๋องอลูมิเนียม', color: '#f59e0b', dotClass: 'bg-amber-500' },
+                { id: 'milk', name: 'กล่องนม UHT', color: '#f97316', dotClass: 'bg-orange-500' },
+                { id: 'snack', name: 'ซองขนม', color: '#a855f7', dotClass: 'bg-purple-500' },
+                { id: 'cap', name: 'ฝาขวดน้ำ', color: '#3b82f6', dotClass: 'bg-blue-500' }
+            ];
+
+            const chartCanvas = document.getElementById('wasteDonutChart');
+            const legendHTML = ['<div class="space-y-2.5">'];
+            const values = [];
+            const colors = [];
+            let currentPerc = 0;
+
+            types.forEach(t => {
+                const qty = stats[t.id];
+                const perc = total > 0 ? (qty / total) * 100 : 0;
+                values.push(qty);
+                colors.push(t.color);
+                legendHTML.push(`
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 rounded-full ${t.dotClass} mr-2 shadow-sm"></span>
+                            <span class="text-slate-600 font-medium">${t.name}</span>
+                        </div>
+                        <div class="text-right flex items-center space-x-2">
+                            <span class="font-bold text-slate-800">${qty.toLocaleString()}</span>
+                            <span class="text-xs text-slate-400 w-10 text-right bg-slate-50 px-1 py-0.5 rounded">${perc.toFixed(1)}%</span>
+                        </div>
+                    </div>
+                `);
+                currentPerc += perc;
+            });
+            legendHTML.push('</div>');
+            document.getElementById('wasteLegend').innerHTML = legendHTML.join('');
+
+            if (wasteChartInstance) {
+                wasteChartInstance.destroy();
+            }
+
+            if (chartCanvas) {
+                const tooltipEl = document.getElementById('custom-tooltip');
+                if (window.ChartDataLabels) {
+                    Chart.register(window.ChartDataLabels);
+                }
+                wasteChartInstance = new Chart(chartCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: types.map(t => t.name),
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colors,
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '72%',
+                        onHover: (event, activeElements) => {
+                            if (event.native && event.native.target) {
+                                event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                enabled: false,
+                                external: (context) => {
+                                    const { chart, tooltip } = context;
+                                    if (tooltip.opacity === 0) {
+                                        tooltipEl.style.opacity = '0';
+                                        return;
+                                    }
+
+                                    const titleLines = tooltip.title || [];
+                                    const bodyLines = tooltip.body.map(b => b.lines);
+                                    const titleElement = document.getElementById('tooltip-title');
+                                    const bodyElement = document.getElementById('tooltip-body');
+                                    const rawValue = tooltip.dataPoints[0].raw;
+
+                                    titleElement.innerHTML = titleLines[0] || 'ข้อมูล';
+                                    bodyElement.innerHTML = `จำนวน: ${rawValue.toLocaleString()} ชิ้น (${((rawValue / total) * 100).toFixed(1)}%)`;
+
+                                    const canvasRect = chart.canvas.getBoundingClientRect();
+                                    const containerRect = chartCanvas.parentElement.getBoundingClientRect();
+                                    const left = canvasRect.left - containerRect.left + tooltip.caretX;
+                                    const top = canvasRect.top - containerRect.top + tooltip.caretY;
+
+                                    tooltipEl.style.opacity = '1';
+                                    tooltipEl.style.left = `${left}px`;
+                                    tooltipEl.style.top = `${top - 12}px`;
+                                }
+                            },
+                            datalabels: {
+                                color: '#0f172a',
+                                font: {
+                                    weight: 'bold',
+                                    size: 12
+                                },
+                                formatter: (value, context) => {
+                                    return context.chart.data.labels[context.dataIndex];
+                                },
+                                anchor: 'end',
+                                align: 'end',
+                                offset: 8
+                            }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            duration: 800
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderLeaderboards() {
+            const facultyContainer = document.getElementById('topFacultyList');
+            if(!facultyContainer) return;
+
+            const faculties = [
+                { rank: 1, name: "คณะวิทยาศาสตร์", points: 45800, students: 145 },
+                { rank: 2, name: "คณะครุศาสตร์", points: 38200, students: 112 },
+                { rank: 3, name: "คณะวิทยาการจัดการ", points: 29100, students: 95 },
+                { rank: 4, name: "คณะมนุษยศาสตร์ฯ", points: 24500, students: 88 },
+                { rank: 5, name: "คณะเทคโนโลยีอุตสาหกรรม", points: 19800, students: 65 }
+            ];
+
+            facultyContainer.innerHTML = faculties.map(f => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl ${f.rank === 1 ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100' : 'bg-slate-50 hover:bg-slate-100 border border-slate-100'} transition-colors group">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full ${f.rank === 1 ? 'bg-gradient-to-br from-amber-300 to-amber-500 text-amber-900' : f.rank === 2 ? 'bg-slate-200 text-slate-700' : f.rank === 3 ? 'bg-orange-200 text-orange-800' : 'bg-white text-slate-500 border border-slate-200'} font-bold flex items-center justify-center text-sm mr-3 shadow-sm group-hover:scale-110 transition-transform">
+                            ${f.rank}
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold ${f.rank === 1 ? 'text-amber-700' : 'text-slate-700'}">${f.name}</p>
+                            <p class="text-[10px] ${f.rank === 1 ? 'text-amber-600/70' : 'text-slate-500'}"><i class="fa-solid fa-users mr-1 opacity-70"></i> ${f.students} คนเข้าร่วม</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black ${f.rank === 1 ? 'text-amber-600' : 'text-emerald-600'}">${f.points.toLocaleString()} <span class="text-[10px] font-normal opacity-50">Pt</span></p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderLevelChart() {
+            const chartContainer = document.getElementById('levelDistributionChart');
+            if(!chartContainer) return;
+
+            // จำลองข้อมูลจำนวนผู้ใช้งานในแต่ละระดับ (รวม 158 คนตามสถิติด้านบน)
+            const levels = [
+                { id: 'champion', name: 'Green Champion', icon: '🏆', range: '701+ คะแนน', count: 8, color: 'from-amber-400 via-yellow-400 to-amber-500', glow: 'shadow-amber-400/50' },
+                { id: 'hero', name: 'Green Hero', icon: '🌳', range: '301 - 700 คะแนน', count: 20, color: 'from-emerald-400 via-green-400 to-emerald-500', glow: 'shadow-emerald-400/50' },
+                { id: 'tree', name: 'Green Tree', icon: '🌿', range: '101 - 300 คะแนน', count: 45, color: 'from-teal-300 via-teal-400 to-teal-500', glow: 'shadow-teal-400/50' },
+                { id: 'seed', name: 'Green Seed', icon: '🌱', range: '0 - 100 คะแนน', count: 85, color: 'from-green-300 via-green-400 to-green-500', glow: 'shadow-green-400/50' }
+            ];
+
+            const total = levels.reduce((sum, lvl) => sum + lvl.count, 0);
+
+            chartContainer.innerHTML = levels.map(lvl => {
+                const percent = total > 0 ? (lvl.count / total) * 100 : 0;
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center text-sm group">
+                        <div class="flex items-center w-full sm:w-1/3 md:w-1/4 mb-1 sm:mb-0">
+                            <div class="text-3xl mr-3 group-hover:scale-110 transition-transform drop-shadow-md">${lvl.icon}</div>
+                            <div>
+                                <div class="font-bold text-slate-700">${lvl.name}</div>
+                                <div class="text-[10px] text-slate-400 font-medium">${lvl.range}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Life Bar Container -->
+                        <div class="flex-grow mx-0 sm:mx-4 relative h-7 bg-slate-200 border-2 border-slate-300 p-0.5 rounded-md skew-x-[-12deg] shadow-inner overflow-hidden flex items-center">
+                            <!-- Background pattern (empty life) -->
+                            <div class="absolute inset-0 opacity-10 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,#000_5px,#000_10px)]"></div>
+                            
+                            <!-- Fill Bar -->
+                            <div class="h-full bg-gradient-to-r ${lvl.color} shadow-lg ${lvl.glow} transition-all duration-1000 relative overflow-hidden" style="width: ${percent}%;">
+                                <!-- Inner Glass/Shine Effect -->
+                                <div class="absolute top-0 left-0 w-full h-1/2 bg-white/30"></div>
+                                <!-- Pulse Glow at the tip -->
+                                <div class="absolute top-0 right-0 bottom-0 w-3 bg-white/60 blur-[2px] animate-pulse"></div>
+                            </div>
+                        </div>
+
+                        <div class="w-full sm:w-20 text-left sm:text-right mt-1 sm:mt-0">
+                            <span class="font-black text-xl text-slate-800">${lvl.count}</span> <span class="text-xs text-slate-500 font-bold">คน</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
