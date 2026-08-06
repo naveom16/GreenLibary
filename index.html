@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script>
         window.NRRU_GREEN_CONFIG = window.NRRU_GREEN_CONFIG || {
-            API_URL: 'api/proxy.php',
+            API_URL: 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec',
             API_KEY: '',
             USE_MOCK_DATA: false
         };
@@ -461,12 +461,12 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">รหัสผ่าน</label>
-                        <input type="password" required class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="••••••••">
+                        <input type="password" id="loginPassword" required class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="••••••••">
                     </div>
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors mt-2">
                         เข้าสู่ระบบ
                     </button>
-                    <p class="text-xs text-center text-slate-500 mt-4">จำลองการเข้าสู่ระบบ: ใช้อีเมลใดก็ได้เพื่อทดสอบ</p>
+                    <p class="text-xs text-center text-slate-500 mt-4">เข้าสู่ระบบด้วยบัญชีจริงจาก Google Apps Script</p>
                 </form>
 
                 <!-- Register Form -->
@@ -494,7 +494,7 @@
                         </div>
                         <div class="col-span-2">
                             <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่าน</label>
-                            <input type="password" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="ตั้งรหัสผ่าน">
+                            <input type="password" id="regPassword" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="ตั้งรหัสผ่าน">
                         </div>
                     </div>
                     <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-colors mt-2 text-sm">
@@ -561,16 +561,10 @@
                 }
 
                 try {
-                    const isProxyRequest = /proxy\.php$/i.test(this.config.apiUrl);
-                    const requestBody = JSON.stringify({ action, payload, apiKey: this.config.apiKey });
-                    const requestUrl = isProxyRequest
-                        ? `${this.config.apiUrl}?action=${encodeURIComponent(action)}&payload=${encodeURIComponent(JSON.stringify(payload))}&apiKey=${encodeURIComponent(this.config.apiKey || '')}`
-                        : this.config.apiUrl;
-
-                    const response = await fetch(requestUrl, {
-                        method: isProxyRequest ? 'GET' : 'POST',
-                        headers: isProxyRequest ? { Accept: 'application/json' } : this.getHeaders(),
-                        body: isProxyRequest ? undefined : requestBody
+                    const response = await fetch(this.config.apiUrl, {
+                        method: 'POST',
+                        headers: this.getHeaders(),
+                        body: JSON.stringify({ action, payload, apiKey: this.config.apiKey })
                     });
 
                     const responseText = await response.text();
@@ -592,6 +586,14 @@
                     console.warn('API unavailable, falling back to mock data:', error);
                     return null;
                 }
+            }
+
+            async loginUser(payload) {
+                return this.request('loginUser', payload);
+            }
+
+            async registerUser(payload) {
+                return this.request('registerUser', payload);
             }
 
             async getDashboardData(userEmail) {
@@ -897,29 +899,59 @@
 
         async function login(e) {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const mockName = email.split('@')[0];
-            
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const result = await greenService.loginUser({ email, password });
+
+            if (!result?.success) {
+                showMessage('เข้าสู่ระบบไม่สำเร็จ', result?.error || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+                return;
+            }
+
+            const profile = result.userProfile || {};
             currentUser = {
-                name: mockName,
+                name: profile.Username || email.split('@')[0],
                 email: email
             };
-            await completeAuth(currentUser.name);
+            currentUserProfile = profile;
+            await completeAuth(profile.Username || currentUser.name, profile);
         }
 
         async function register(e) {
             e.preventDefault();
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const studentId = document.getElementById('regId').value.trim();
+            const phone = document.querySelector('#registerForm input[type="tel"]').value.trim();
+            const faculty = document.querySelector('#registerForm input[placeholder="คณะวิทยาศาสตร์"]').value.trim();
+            const major = faculty || 'CS';
+
+            const result = await greenService.registerUser({
+                name,
+                email,
+                password,
+                studentId,
+                phone,
+                faculty,
+                major
+            });
+
+            if (!result?.success) {
+                showMessage('สมัครสมาชิกไม่สำเร็จ', result?.error || 'ไม่สามารถสร้างบัญชีได้');
+                return;
+            }
+
+            const profile = result.userProfile || {};
             currentUser = {
-                name: name,
+                name: profile.Username || name,
                 email: email
             };
-            await completeAuth(currentUser.name);
+            currentUserProfile = profile;
+            await completeAuth(profile.Username || currentUser.name, profile);
         }
         
-        async function completeAuth(displayName) {
+        async function completeAuth(displayName, profile = null) {
             closeLoginModal();
             document.getElementById('nav-guest').classList.add('hidden');
             document.getElementById('nav-logged-in').classList.remove('hidden');

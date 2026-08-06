@@ -111,7 +111,7 @@ function ensureHeaders(sheet, headers) {
 
 function getUsersSheet() {
   const sheet = getSheet('Users');
-  ensureHeaders(sheet, ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive']);
+  ensureHeaders(sheet, ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password']);
   return sheet;
 }
 
@@ -131,14 +131,23 @@ function rowsToObjects(rows, headers) {
   });
 }
 
+function getHeaderIndex(headers, headerName) {
+  return headers.indexOf(headerName);
+}
+
+function getCellValue(row, headers, headerName, fallback = '') {
+  const index = getHeaderIndex(headers, headerName);
+  return index >= 0 ? (row[index] ?? fallback) : fallback;
+}
+
 function getOrCreateUser(userEmail, username) {
   const sheet = getUsersSheet();
   const values = sheet.getDataRange().getDisplayValues();
-  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive'];
+  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password'];
   const rows = values.slice(1);
   const userId = userEmail || `user-${Date.now()}`;
 
-  const existing = rows.find((row) => String(row[0]) === String(userId));
+  const existing = rows.find((row) => String(getCellValue(row, headers, 'UserID', '')) === String(userId));
   if (existing) {
     return rowsToObjects([existing], headers)[0];
   }
@@ -152,7 +161,9 @@ function getOrCreateUser(userEmail, username) {
     now,
     0,
     0,
-    now
+    now,
+    userEmail || '',
+    ''
   ];
   sheet.appendRow(newRow);
   return {
@@ -163,8 +174,73 @@ function getOrCreateUser(userEmail, username) {
     JoinDate: now,
     TotalGreenPoint: 0,
     TotalCarbonSaved: 0,
-    LastActive: now
+    LastActive: now,
+    Email: userEmail || '',
+    Password: ''
   };
+}
+
+function registerUser(payload) {
+  const userEmail = String(payload.email || payload.userEmail || '').trim().toLowerCase();
+  const password = String(payload.password || '');
+  const username = String(payload.name || payload.username || userEmail.split('@')[0] || 'Guest');
+  const faculty = String(payload.faculty || 'คณะวิทยาศาสตร์');
+  const major = String(payload.major || 'CS');
+
+  if (!userEmail || !password) {
+    return { success: false, error: 'Email and password are required' };
+  }
+
+  const sheet = getUsersSheet();
+  const values = sheet.getDataRange().getDisplayValues();
+  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password'];
+  const rows = values.slice(1);
+  const existing = rows.find((row) => String(getCellValue(row, headers, 'Email', '')).toLowerCase() === userEmail);
+  if (existing) {
+    return { success: false, error: 'Email already registered' };
+  }
+
+  const now = new Date().toISOString();
+  sheet.appendRow([userEmail, username, faculty, major, now, 0, 0, now, userEmail, password]);
+  const profile = {
+    UserID: userEmail,
+    Username: username,
+    Faculty: faculty,
+    Major: major,
+    JoinDate: now,
+    TotalGreenPoint: 0,
+    TotalCarbonSaved: 0,
+    LastActive: now,
+    Email: userEmail,
+    Password: password
+  };
+  return { success: true, userProfile: profile };
+}
+
+function loginUser(payload) {
+  const userEmail = String(payload.email || payload.userEmail || '').trim().toLowerCase();
+  const password = String(payload.password || '');
+
+  if (!userEmail || !password) {
+    return { success: false, error: 'Email and password are required' };
+  }
+
+  const sheet = getUsersSheet();
+  const values = sheet.getDataRange().getDisplayValues();
+  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password'];
+  const rows = values.slice(1);
+  const match = rows.find((row) => {
+    const storedEmail = String(getCellValue(row, headers, 'Email', '')).toLowerCase();
+    const storedPassword = String(getCellValue(row, headers, 'Password', ''));
+    return storedEmail === userEmail && storedPassword === password;
+  });
+
+  if (!match) {
+    return { success: false, error: 'Invalid email or password' };
+  }
+
+  const profile = rowsToObjects([match], headers)[0];
+  return { success: true, userProfile: profile };
 }
 
 function getCarbonLogsByUser(userId) {
@@ -242,12 +318,15 @@ function recalculateUserTotals(userId) {
   const userValues = usersSheet.getDataRange().getDisplayValues();
   const headers = userValues[0];
   const rows = userValues.slice(1);
-  const index = rows.findIndex((row) => String(row[0]) === String(userId));
+  const index = rows.findIndex((row) => String(getCellValue(row, headers, 'UserID', '')) === String(userId));
   if (index >= 0) {
     const rowIndex = index + 2;
-    usersSheet.getRange(rowIndex, 6).setValue(totalGreenPoint);
-    usersSheet.getRange(rowIndex, 7).setValue(Number(totalCarbonSaved.toFixed(3)));
-    usersSheet.getRange(rowIndex, 8).setValue(new Date().toISOString());
+    const totalGreenIndex = getHeaderIndex(headers, 'TotalGreenPoint');
+    const totalCarbonIndex = getHeaderIndex(headers, 'TotalCarbonSaved');
+    const lastActiveIndex = getHeaderIndex(headers, 'LastActive');
+    usersSheet.getRange(rowIndex, totalGreenIndex + 1).setValue(totalGreenPoint);
+    usersSheet.getRange(rowIndex, totalCarbonIndex + 1).setValue(Number(totalCarbonSaved.toFixed(3)));
+    usersSheet.getRange(rowIndex, lastActiveIndex + 1).setValue(new Date().toISOString());
   }
 }
 
@@ -313,11 +392,12 @@ function getFacultyRanking() {
   const usersSheet = getUsersSheet();
   const values = usersSheet.getDataRange().getDisplayValues();
   if (values.length <= 1) return { success: true, ranking: [] };
+  const headers = values[0];
   const rows = values.slice(1);
   const map = {};
   rows.forEach((row) => {
-    const faculty = row[2] || 'Unknown';
-    const point = Number(row[5]) || 0;
+    const faculty = getCellValue(row, headers, 'Faculty', 'Unknown');
+    const point = Number(getCellValue(row, headers, 'TotalGreenPoint', 0)) || 0;
     map[faculty] = (map[faculty] || 0) + point;
   });
   const ranking = Object.entries(map)
@@ -331,11 +411,12 @@ function getMajorRanking() {
   const usersSheet = getUsersSheet();
   const values = usersSheet.getDataRange().getDisplayValues();
   if (values.length <= 1) return { success: true, ranking: [] };
+  const headers = values[0];
   const rows = values.slice(1);
   const map = {};
   rows.forEach((row) => {
-    const major = row[3] || 'Unknown';
-    const point = Number(row[5]) || 0;
+    const major = getCellValue(row, headers, 'Major', 'Unknown');
+    const point = Number(getCellValue(row, headers, 'TotalGreenPoint', 0)) || 0;
     map[major] = (map[major] || 0) + point;
   });
   const ranking = Object.entries(map)
