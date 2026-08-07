@@ -15,10 +15,7 @@
         window.NRRU_GREEN_CONFIG = window.NRRU_GREEN_CONFIG || {
             API_URL: 'https://script.google.com/macros/s/AKfycbwICr2rAVg_7zNG1VlVjnb3vkAXSL_QFXN6yg4uu36ZuwXAiEGLNqLqGnx-KxAc7SQZ/exec',
             API_KEY: 'AIzaSyCXCHIB8bLk27t9_pVQ7LK3jX4F64lbyH4',
-            // [NEW] ถ้า deploy บนโฮสต์ที่รองรับ PHP (ไม่ใช่ GitHub Pages) และต้องการใช้ proxy.php
-            // เพื่อซ่อน API_KEY ไว้ฝั่งเซิร์ฟเวอร์ ให้ใส่ URL ของ proxy.php ที่นี่ เช่น '/proxy.php'
-            // ถ้าปล่อยว่างไว้ (ค่าเริ่มต้น) ระบบจะเรียก Google Apps Script (API_URL) ตรง ๆ จากเบราว์เซอร์
-            // ซึ่งใช้ได้ทันทีบน GitHub Pages (Static Hosting ไม่มี PHP)
+            
             PROXY_URL: '',
             USE_MOCK_DATA: false
         };
@@ -127,7 +124,7 @@
                 <!-- Mascot Image -->
                 <div class="w-full md:w-1/3 flex justify-center mb-8 md:mb-0 relative z-10">
                     <div class="relative w-48 h-48 md:w-64 md:h-64 animate-float drop-shadow-2xl">
-                        <img src="logoImage\BookBotImage1.png" alt="Bookbot Mascot" class="w-full h-full object-contain drop-shadow-xl rounded-full border-4 border-white/20">
+                        <img src="logoImage\BookBotImage1.png" alt="Bookbot Mascot" class="w-full h-full object-cover drop-shadow-xl rounded-full border-4 border-white/20">
                     </div>
                 </div>
 
@@ -770,6 +767,10 @@
                 return this.request('getFacultyRanking', payload);
             }
 
+            async getPublicDashboardData() {
+                return this.request('getPublicDashboardData', {});
+            }
+
             async getUserRank(payload) {
                 return this.request('getUserRank', payload);
             }
@@ -973,7 +974,7 @@
         async function initializeApp() {
             const restored = await restoreSession();
             if (!restored) {
-                await loadDashboardData();
+                await loadPublicDashboardData();
                 updateGlobalStats();
                 updatePersonalDashboard();
                 renderCarbonChart();
@@ -1260,6 +1261,7 @@
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
+            loadPublicDashboardData();
             updatePersonalDashboard();
             updateGlobalStats();
             showMessage('ออกจากระบบเรียบร้อย', 'แล้วพบกันใหม่ Carbon Hero!');
@@ -1856,6 +1858,37 @@
                 msgBox.classList.add('opacity-0', 'transition-opacity', 'duration-500', 'transform', '-translate-y-4');
                 setTimeout(() => msgBox.remove(), 500);
             }, 5000);
+        }
+
+        async function loadPublicDashboardData() {
+            const result = await greenService.getPublicDashboardData();
+            if (result && result.success) {
+                globalRecords = (result.records || []).map(record => ({
+                    id: record.id || Date.now() + Math.random(),
+                    userMask: record.userMask || 'ไม่ระบุ',
+                    type: record.type || getWasteLabel(record.typeId),
+                    typeId: record.typeId || 'snack',
+                    qty: record.qty || 0,
+                    weight: record.weight || 0,
+                    point: record.point || 0,
+                    carbon: record.carbon || 0,
+                    date: record.date || formatDisplayDate(record.dateTime || new Date().toISOString()),
+                    dateTime: record.dateTime || new Date().toISOString(),
+                    img: record.img || '',
+                    username: record.username || '',
+                    userMask: record.userMask || 'ไม่ระบุ',
+                    status: record.status || 'Approved'
+                }));
+            } else {
+                globalRecords = [];
+            }
+
+            const facultyResult = await greenService.getFacultyRanking();
+            if (facultyResult && facultyResult.success) {
+                dashboardData.facultyRanking = facultyResult.ranking || [];
+            } else {
+                dashboardData.facultyRanking = [];
+            }
         }
 
         async function loadDashboardData() {
