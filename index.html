@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script>
         window.NRRU_GREEN_CONFIG = window.NRRU_GREEN_CONFIG || {
-            API_URL: 'https://script.google.com/macros/s/AKfycbxLXz6Q06B1I0Zs8ShlYWOuD_dNdcgsF14kYlzBBYdAYIo7Rep-SfsvuvQEBWIJac5Q/exec',
+            API_URL: 'https://script.google.com/macros/s/AKfycbyInK9UqBhBC2nLJGUgRv6IRgGI7NBuGKj7GvkcwbLrBar7vxjpOafhA-t67cbVsaQ/exec',
             API_KEY: 'AIzaSyCXCHIB8bLk27t9_pVQ7LK3jX4F64lbyH4',
             // [NEW] ถ้า deploy บนโฮสต์ที่รองรับ PHP (ไม่ใช่ GitHub Pages) และต้องการใช้ proxy.php
             // เพื่อซ่อน API_KEY ไว้ฝั่งเซิร์ฟเวอร์ ให้ใส่ URL ของ proxy.php ที่นี่ เช่น '/proxy.php'
@@ -75,6 +75,7 @@
                         <div class="text-right hidden md:block">
                             <p class="text-xs text-slate-500">ยินดีต้อนรับ</p>
                             <p class="text-sm font-bold text-slate-700" id="nav-username">นักศึกษา NRRU</p>
+                            <span id="admin-badge" class="hidden inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200">ADMIN</span>
                         </div>
                         <div class="h-10 w-10 bg-black rounded-full flex items-center justify-center overflow-hidden border-2 border-emerald-500 shadow-sm">
                             <img src="logoImage\logo.png" alt="Profile" class="h-full w-full object-cover">
@@ -317,12 +318,79 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Action Area (Form) -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sticky top-24">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">บันทึกการส่งขยะ</h3>
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i> ประวัติการทำกิจกรรมของคุณ
+                            </h3>
+                        </div>
                         
+                        <div id="historyControls" class="mb-4 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                            <div class="flex-1">
+                                <input id="historySearch" type="text" placeholder="ค้นหาประวัติ..." class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                            </div>
+                            <div class="min-w-[180px]">
+                                <select id="historyFilter" class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                    <option value="all">ทุกประเภท</option>
+                                    <option value="snack">ซองขนม</option>
+                                    <option value="milk">กล่องนม</option>
+                                    <option value="can">กล่องอลูมิเนียม</option>
+                                    <option value="cap">ฝาขวดน้ำ</option>
+                                    <option value="pet">ขวด PET</option>
+                                </select>
+                            </div>
+                        </div>
+                    <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-slate-500 bg-slate-50 uppercase rounded-t-xl">
+                                    <tr>
+                                        <th class="px-3 py-3 rounded-tl-xl">วันที่</th>
+                                        <th class="px-3 py-3 text-center">หลักฐาน</th>
+                                        <th class="px-3 py-3">ประเภท</th>
+                                        <th class="px-3 py-3 text-center">จำนวน/น้ำหนัก</th>
+                                        <th class="px-3 py-3 text-right">Green Pt.</th>
+                                        <th class="px-3 py-3 text-right">Carbon Pt. (kgCO₂)</th>
+                                        <th class="px-3 py-3 text-right rounded-tr-xl">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="personalHistoryTable" class="divide-y divide-slate-100">
+                                    <!-- User history will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="emptyHistoryState" class="py-10 text-center hidden">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-3 text-slate-300">
+                                <i class="fa-solid fa-box-open text-2xl"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium" id="emptyTitle">ยังไม่มีประวัติการทำกิจกรรม</p>
+                            <p class="text-xs text-slate-400 mt-1" id="emptySubtitle">มาร่วมรักษ์โลกด้วยการส่งขยะรีไซเคิลกันเถอะ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Action Button -->
+            <button id="recordFab" onclick="toggleRecordModal()" class="sticky bottom-8 right-8 z-50 bg-emerald-600 hover:bg-emerald-700 text-white w-14 h-14 rounded-full shadow-lg shadow-emerald-600/30 flex items-center justify-center transition-transform hover:scale-110 active:scale-95">
+                <i class="fa-solid fa-plus text-2xl"></i>
+            </button>
+
+            <!-- Record Form Modal -->
+            <div id="recordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 p-4">
+                <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-center relative">
+                        <button onclick="toggleRecordModal()" class="absolute top-4 right-4 text-white/70 hover:text-white transition">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                        <div class="w-20 h-20 mx-auto bg-black rounded-full p-1 shadow-lg mb-3">
+                            <img src="logoImage\BookBotImage1.png" alt="Mascot" class="w-full h-full object-cover rounded-full">
+                        </div>
+                        <h3 class="text-white font-bold text-xl tracking-wide">บันทึกการส่งขยะ</h3>
+                    </div>
+                    <div class="p-6">
                         <form id="recordForm" onsubmit="submitRecord(event)" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">ประเภทวัสดุรีไซเคิล</label>
@@ -388,48 +456,16 @@
                                 <input type="hidden" id="imageDataString" value="">
                             </div>
 
+                            <div id="editActionBar" class="hidden items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                                <span><i class="fa-solid fa-pen-to-square mr-2"></i>กำลังแก้ไขบันทึก</span>
+                                <button type="button" onclick="cancelEditRecord()" class="text-xs font-semibold text-amber-700 hover:text-amber-800">ยกเลิก</button>
+                            </div>
+
                             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/30 transition-all hover:-translate-y-0.5 mt-4">
                                 <i class="fa-solid fa-plus-circle mr-2"></i> บันทึกข้อมูล
                             </button>
+                            <input type="hidden" id="editingLogId" value="">
                         </form>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 overflow-hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-bold text-slate-800 flex items-center">
-                                <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i> ประวัติการทำกิจกรรมของคุณ
-                            </h3>
-                        </div>
-                        
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left">
-                                <thead class="text-xs text-slate-500 bg-slate-50 uppercase rounded-t-xl">
-                                    <tr>
-                                        <th class="px-3 py-3 rounded-tl-xl">วันที่</th>
-                                        <th class="px-3 py-3 text-center">หลักฐาน</th>
-                                        <th class="px-3 py-3">ประเภท</th>
-                                        <th class="px-3 py-3 text-center">จำนวน/น้ำหนัก</th>
-                                        <th class="px-3 py-3 text-right">Green Pt.</th>
-                                        <th class="px-3 py-3 text-right">Carbon Pt. (kgCO₂)</th>
-                                        <th class="px-3 py-3 text-right rounded-tr-xl">จัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="personalHistoryTable" class="divide-y divide-slate-100">
-                                    <!-- User history will be inserted here -->
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Empty State -->
-                        <div id="emptyHistoryState" class="py-10 text-center hidden">
-                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-3 text-slate-300">
-                                <i class="fa-solid fa-box-open text-2xl"></i>
-                            </div>
-                            <p class="text-slate-500 font-medium">ยังไม่มีประวัติการทำกิจกรรม</p>
-                            <p class="text-xs text-slate-400 mt-1">มาร่วมรักษ์โลกด้วยการส่งขยะรีไซเคิลกันเถอะ</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -466,12 +502,17 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">รหัสผ่าน</label>
-                        <input type="password" id="loginPassword" required class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="••••••••">
+                        <div class="relative">
+                            <input type="password" id="loginPassword" required class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-emerald-500 pr-10" placeholder="••••••••">
+                            <button type="button" onclick="togglePassword('loginPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors mt-2">
                         เข้าสู่ระบบ
                     </button>
-                    <p class="text-xs text-center text-slate-500 mt-4">เข้าสู่ระบบด้วยบัญชีจริงจาก Google Apps Script</p>
+                    
                 </form>
 
                 <!-- Register Form -->
@@ -499,7 +540,12 @@
                         </div>
                         <div class="col-span-2">
                             <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่าน</label>
-                            <input type="password" id="regPassword" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="ตั้งรหัสผ่าน">
+                            <div class="relative">
+                                <input type="password" id="regPassword" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500 pr-10" placeholder="ตั้งรหัสผ่าน">
+                                <button type="button" onclick="togglePassword('regPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-colors mt-2 text-sm">
@@ -573,7 +619,7 @@
                     }
                     return headers;
                 }
-                // เรียก Google Apps Script ตรง ๆ -> ต้องเป็น Simple Request เท่านั้น
+                
                 return { 'Content-Type': 'text/plain;charset=utf-8' };
             }
 
@@ -747,6 +793,7 @@
                 dateTime: dateValue,
                 img: log.ImageURL || log.img || '',
                 username: safeProfile.Username || safeProfile.name || currentUser?.name || 'คุณ',
+                userMask: maskUsername(safeProfile.Username || safeProfile.name || currentUser?.name || 'คุณ'),
                 status: log.Status || 'Pending'
             };
         }
@@ -756,6 +803,13 @@
             const date = new Date(dateValue);
             if (Number.isNaN(date.getTime())) return dateValue;
             return date.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+        }
+
+        function maskUsername(name) {
+            if (!name || name === 'คุณ') return 'คุณ';
+            const trimmed = name.trim();
+            if (trimmed.length <= 2) return trimmed;
+            return trimmed.substring(0, 2) + ' ***' + trimmed.substring(trimmed.length - 2);
         }
 
         function ensureDashboardSections() {
@@ -794,7 +848,7 @@
             }
 
             if (!document.getElementById('dashboardInsights')) {
-                const mainGrid = document.querySelector('#privateDashboard > .grid.grid-cols-1.lg\\:grid-cols-3.gap-6');
+                const mainGrid = document.querySelector('#privateDashboard > .grid.grid-cols-1.gap-6');
                 if (mainGrid) {
                     mainGrid.insertAdjacentHTML('beforebegin', `
                         <div id="dashboardInsights" class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
@@ -864,15 +918,71 @@
                 modal.classList.remove('opacity-0');
                 document.getElementById('authModalContent').classList.remove('scale-95');
             }, 10);
+            attachFloatingEffect(modal, document.getElementById('authModalContent'));
         }
 
         function closeLoginModal() {
             const modal = document.getElementById('authModal');
             modal.classList.add('opacity-0');
             document.getElementById('authModalContent').classList.add('scale-95');
+            detachFloatingEffect(modal);
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 300);
+        }
+
+        function toggleRecordModal() {
+            const modal = document.getElementById('recordModal');
+            const fab = document.getElementById('recordFab');
+            if (modal.classList.contains('hidden')) {
+                if (fab) fab.classList.add('hidden');
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.bg-white').classList.remove('scale-95');
+                }, 10);
+                attachFloatingEffect(modal, modal.querySelector('.bg-white'));
+            } else {
+                modal.classList.add('opacity-0');
+                modal.querySelector('.bg-white').classList.add('scale-95');
+                detachFloatingEffect(modal);
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    if (fab) fab.classList.remove('hidden');
+                }, 300);
+            }
+        }
+
+        function attachFloatingEffect(modal, card) {
+            const onMove = (e) => {
+                const rect = modal.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const moveX = ((x - centerX) / centerX) * 8;
+                const moveY = ((y - centerY) / centerY) * 8;
+                card.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            };
+            const onLeave = () => {
+                card.style.transform = 'translate(0px, 0px)';
+            };
+            modal._floatingHandler = onMove;
+            modal._floatingLeave = onLeave;
+            modal.addEventListener('mousemove', onMove);
+            modal.addEventListener('mouseleave', onLeave);
+        }
+
+        function detachFloatingEffect(modal) {
+            if (!modal) return;
+            if (modal._floatingHandler) {
+                modal.removeEventListener('mousemove', modal._floatingHandler);
+                modal.removeEventListener('mouseleave', modal._floatingLeave);
+                modal._floatingHandler = null;
+                modal._floatingLeave = null;
+            }
+            const card = modal.querySelector('.bg-white');
+            if (card) card.style.transform = '';
         }
 
         function switchTab(tab) {
@@ -906,12 +1016,30 @@
             }
         }
 
-        function showMessage(title, subtitle) {
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function showMessage(title, subtitle, type = 'success') {
+            const isError = type === 'error';
+            const iconContainerClass = isError
+                ? 'h-10 w-10 bg-red-500/20 rounded-full flex items-center justify-center mr-4 text-red-400'
+                : 'h-10 w-10 bg-emerald-500/20 rounded-full flex items-center justify-center mr-4 text-emerald-400';
+            const iconClass = isError ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-check text-xl';
+            
             const msgBox = document.createElement('div');
-            msgBox.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[150] animate-fade-in flex items-center border border-slate-700';
+            msgBox.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[150] animate-fade-in flex items-center border border-slate-700 opacity-0 transition-opacity duration-500';
             msgBox.innerHTML = `
-                <div class="h-10 w-10 bg-emerald-500/20 rounded-full flex items-center justify-center mr-4 text-emerald-400">
-                    <i class="fa-solid fa-check text-xl"></i>
+                <div class="${iconContainerClass}">
+                    <i class="${iconClass}"></i>
                 </div>
                 <div>
                     <h4 class="font-bold text-sm">${title}</h4>
@@ -920,7 +1048,10 @@
             `;
             document.body.appendChild(msgBox);
             setTimeout(() => {
-                msgBox.classList.add('opacity-0', 'transition-opacity', 'duration-500', 'transform', '-translate-y-4');
+                msgBox.classList.remove('opacity-0');
+            }, 10);
+            setTimeout(() => {
+                msgBox.classList.add('opacity-0');
                 setTimeout(() => msgBox.remove(), 500);
             }, 3000);
         }
@@ -929,10 +1060,30 @@
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
+            
+            if (email === 'admin@nrru.ac.th' && password === '123456') {
+                currentUser = {
+                    name: 'Admin',
+                    email: email,
+                    isAdmin: true
+                };
+                currentUserProfile = {
+                    Username: 'Admin',
+                    Faculty: 'Administration',
+                    Major: 'System Admin',
+                    TotalGreenPoint: 9999,
+                    TotalCarbonSaved: 9999,
+                    JoinDate: new Date().toISOString(),
+                    LastActive: new Date().toISOString()
+                };
+                await completeAuth('Admin', currentUserProfile);
+                return;
+            }
+            
             const result = await greenService.loginUser({ email, password });
 
             if (!result?.success) {
-                showMessage('เข้าสู่ระบบไม่สำเร็จ', result?.error || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+                showMessage('เข้าสู่ระบบไม่สำเร็จ', result?.error || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', 'error');
                 return;
             }
 
@@ -966,7 +1117,7 @@
             });
 
             if (!result?.success) {
-                showMessage('สมัครสมาชิกไม่สำเร็จ', result?.error || 'ไม่สามารถสร้างบัญชีได้');
+                    showMessage('สมัครสมาชิกไม่สำเร็จ', result?.error || 'ไม่สามารถสร้างบัญชีได้', 'error');
                 return;
             }
 
@@ -986,6 +1137,13 @@
             document.getElementById('nav-logged-in').classList.add('flex');
             
             document.getElementById('nav-username').textContent = displayName;
+            
+            const adminBadge = document.getElementById('admin-badge');
+            if (currentUser?.isAdmin && adminBadge) {
+                adminBadge.classList.remove('hidden');
+            } else if (adminBadge) {
+                adminBadge.classList.add('hidden');
+            }
             
             document.getElementById('privateDashboard').classList.remove('hidden');
             setTimeout(() => {
@@ -1011,6 +1169,9 @@
             document.getElementById('nav-logged-in').classList.add('hidden');
             document.getElementById('nav-logged-in').classList.remove('flex');
             document.getElementById('privateDashboard').classList.add('hidden');
+            
+            const adminBadge = document.getElementById('admin-badge');
+            if (adminBadge) adminBadge.classList.add('hidden');
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
@@ -1121,7 +1282,7 @@
             const editingLogId = document.getElementById('editingLogId').value;
 
             if(!typeId || !qty || !weight) {
-                showMessage('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกประเภทและจำนวนก่อนบันทึก');
+                showMessage('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกประเภทและจำนวนก่อนบันทึก', 'error');
                 return;
             }
 
@@ -1171,7 +1332,7 @@
                 } else {
                     const newRecord = {
                         id: Date.now(),
-                        userMask: currentUser?.name || 'คุณ',
+                        userMask: maskUsername(currentUser?.name || 'คุณ'),
                         typeId,
                         type: getWasteLabel(typeId),
                         qty,
@@ -1182,6 +1343,7 @@
                         img: imgData,
                         dateTime: new Date().toISOString(),
                         username: currentUser?.name || 'คุณ',
+                        userMask: maskUsername(currentUser?.name || 'คุณ'),
                         status: 'Approved'
                     };
                     userRecords.unshift(newRecord);
@@ -1203,6 +1365,23 @@
             document.getElementById('editingLogId').value = '';
             const editBar = document.getElementById('editActionBar');
             if (editBar) editBar.classList.add('hidden');
+            toggleRecordModal();
+        }
+
+        function cancelEditRecord() {
+            document.getElementById('editingLogId').value = '';
+            document.getElementById('imageDataString').value = '';
+            document.getElementById('imagePreview').src = '';
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('imagePreviewContainer').classList.remove('flex');
+            document.getElementById('wasteType').value = '';
+            document.getElementById('wasteQty').value = '';
+            document.getElementById('wasteWeight').value = '';
+            document.getElementById('previewPt').textContent = '0';
+            document.getElementById('previewCb').textContent = '0.000';
+            const editBar = document.getElementById('editActionBar');
+            if (editBar) editBar.classList.add('hidden');
         }
 
         function startEditRecord(logId) {
@@ -1220,21 +1399,29 @@
             calculatePreview();
             const editBar = document.getElementById('editActionBar');
             if (editBar) editBar.classList.remove('hidden');
-            document.getElementById('privateDashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            toggleRecordModal();
         }
 
         async function deleteLogRecord(logId) {
             const confirmed = window.confirm('ต้องการลบบันทึกนี้ใช่หรือไม่');
             if (!confirmed) return;
-            const payload = { logId, userEmail: currentUser?.email };
-            const result = await greenService.deleteCarbonLog(payload);
-            if (result && result.success) {
-                showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
-            } else {
+            
+            if (currentUser?.isAdmin) {
                 userRecords = userRecords.filter(item => String(item.id) !== String(logId));
                 globalRecords = globalRecords.filter(item => String(item.id) !== String(logId));
                 showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
+            } else {
+                const payload = { logId, userEmail: currentUser?.email };
+                const result = await greenService.deleteCarbonLog(payload);
+                if (result && result.success) {
+                    showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
+                } else {
+                    userRecords = userRecords.filter(item => String(item.id) !== String(logId));
+                    globalRecords = globalRecords.filter(item => String(item.id) !== String(logId));
+                    showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
+                }
             }
+            
             await loadDashboardData();
             updatePersonalDashboard();
             updateGlobalStats();
@@ -1253,8 +1440,9 @@
             let totalCb = 0;
             const profileTotalPt = Number(currentUserProfile?.TotalGreenPoint || 0);
             const profileTotalCb = Number(currentUserProfile?.TotalCarbonSaved || 0);
-            const visibleRecords = userRecords.filter(record => {
-                const searchText = `${record.type || ''} ${record.username || ''}`.toLowerCase();
+            const sourceRecords = currentUser?.isAdmin ? globalRecords : userRecords;
+            const visibleRecords = sourceRecords.filter(record => {
+                const searchText = `${record.type || ''} ${record.username || record.userMask || ''}`.toLowerCase();
                 const matchesSearch = historyFilters.search ? searchText.includes(historyFilters.search) : true;
                 const matchesFilter = historyFilters.filter === 'all' || record.typeId === historyFilters.filter;
                 return matchesSearch && matchesFilter;
@@ -1265,6 +1453,13 @@
                 document.getElementById('personalGreenPoints').textContent = profileTotalPt.toLocaleString();
                 document.getElementById('personalCarbonPoints').textContent = profileTotalCb.toFixed(3);
                 updateLevelBadge(profileTotalPt);
+                if (currentUser?.isAdmin) {
+                    document.getElementById('emptyTitle').textContent = 'ยังไม่มีข้อมูลในระบบ';
+                    document.getElementById('emptySubtitle').textContent = 'Admin Panel - ดู/ลบข้อมูลทั้งหมดได้ที่นี่';
+                } else {
+                    document.getElementById('emptyTitle').textContent = 'ยังไม่มีประวัติการทำกิจกรรม';
+                    document.getElementById('emptySubtitle').textContent = 'มาร่วมรักษ์โลกด้วยการส่งขยะรีไซเคิลกันเถอะ';
+                }
                 return;
             } else {
                 emptyState.classList.add('hidden');
@@ -1525,7 +1720,7 @@
             container.innerHTML = logs.length ? logs.map(log => `
                 <div class="rounded-2xl border border-slate-100 p-3 bg-slate-50/70">
                     <div class="flex items-center justify-between mb-2">
-                        <div class="font-semibold text-slate-700">${log.username || 'คุณ'}</div>
+                        <div class="font-semibold text-slate-700">${maskUsername(log.username || 'คุณ')}</div>
                         <div class="text-[11px] text-slate-400">${log.date}</div>
                     </div>
                     <div class="text-sm text-slate-600">${log.type} • ${log.qty} ชิ้น</div>
