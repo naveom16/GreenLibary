@@ -774,6 +774,10 @@
             async getUserRank(payload) {
                 return this.request('getUserRank', payload);
             }
+
+            async getPublicStats() {
+                return this.request('getPublicStats', {});
+            }
         }
 
         const greenService = new NRRUGreenService(APP_CONFIG);
@@ -788,6 +792,7 @@
         };
         let globalRecords = [];
         let userRecords = [];
+        let publicStats = null;
 
         const emissionFactors = {
             cap: 0.02,
@@ -1861,9 +1866,13 @@
         }
 
         async function loadPublicDashboardData() {
-            const result = await greenService.getPublicDashboardData();
-            if (result && result.success) {
-                globalRecords = (result.records || []).map(record => ({
+            const [recordsResult, statsResult] = await Promise.all([
+                greenService.getPublicDashboardData(),
+                greenService.getPublicStats()
+            ]);
+
+            if (recordsResult && recordsResult.success) {
+                globalRecords = (recordsResult.records || []).map(record => ({
                     id: record.id || Date.now() + Math.random(),
                     userMask: record.userMask || 'ไม่ระบุ',
                     type: record.type || getWasteLabel(record.typeId),
@@ -1881,6 +1890,17 @@
                 }));
             } else {
                 globalRecords = [];
+            }
+
+            if (statsResult && statsResult.success && statsResult.stats) {
+                publicStats = statsResult.stats;
+                document.getElementById('statParticipants').textContent = publicStats.participants || 0;
+                document.getElementById('statItems').textContent = (publicStats.totalItems || 0).toLocaleString();
+                document.getElementById('statWeight').textContent = (publicStats.totalWeight || 0).toFixed(2);
+                document.getElementById('globalCarbonPoints').textContent = (publicStats.totalCarbon || 0).toFixed(3);
+                document.getElementById('globalGreenPoints').textContent = (publicStats.totalPoints || 0).toLocaleString();
+            } else {
+                publicStats = null;
             }
 
             const facultyResult = await greenService.getFacultyRanking();
@@ -1941,6 +1961,13 @@
                 dashboardData.rankInfo = null;
                 userRecords = [];
             }
+
+            const statsResult = await greenService.getPublicStats();
+            if (statsResult && statsResult.success && statsResult.stats) {
+                publicStats = statsResult.stats;
+            } else {
+                publicStats = null;
+            }
         }
 
         function updateGlobalStats() {
@@ -1952,12 +1979,26 @@
             const feedContainer = document.getElementById('globalActivityFeed');
             if (feedContainer) feedContainer.innerHTML = '';
 
-            globalRecords.forEach(r => {
-                totalGlobalPt += r.point || 0;
-                totalGlobalCb += r.carbon || 0;
-                totalGlobalQty += r.qty || 0;
-                totalGlobalWeight += r.weight || 0;
-            });
+            if (publicStats) {
+                document.getElementById('statParticipants').textContent = publicStats.participants || 0;
+                document.getElementById('statItems').textContent = (publicStats.totalItems || 0).toLocaleString();
+                document.getElementById('statWeight').textContent = (publicStats.totalWeight || 0).toFixed(2);
+                document.getElementById('globalCarbonPoints').textContent = (publicStats.totalCarbon || 0).toFixed(3);
+                document.getElementById('globalGreenPoints').textContent = (publicStats.totalPoints || 0).toLocaleString();
+            } else {
+                globalRecords.forEach(r => {
+                    totalGlobalPt += r.point || 0;
+                    totalGlobalCb += r.carbon || 0;
+                    totalGlobalQty += r.qty || 0;
+                    totalGlobalWeight += r.weight || 0;
+                });
+
+                document.getElementById('statParticipants').textContent = "0";
+                document.getElementById('statItems').textContent = totalGlobalQty.toLocaleString();
+                document.getElementById('statWeight').textContent = totalGlobalWeight.toFixed(2);
+                document.getElementById('globalCarbonPoints').textContent = totalGlobalCb.toFixed(3);
+                document.getElementById('globalGreenPoints').textContent = totalGlobalPt.toLocaleString();
+            }
 
             const displayRecords = globalRecords.slice(0, 5);
 
