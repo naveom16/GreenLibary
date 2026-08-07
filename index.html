@@ -10,9 +10,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0/dist/chartjs-plugin-zoom.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <script>
         window.NRRU_GREEN_CONFIG = window.NRRU_GREEN_CONFIG || {
-            API_URL: 'https://script.google.com/macros/s/AKfycbxLXz6Q06B1I0Zs8ShlYWOuD_dNdcgsF14kYlzBBYdAYIo7Rep-SfsvuvQEBWIJac5Q/exec',
+            API_URL: 'https://script.google.com/macros/s/AKfycbyInK9UqBhBC2nLJGUgRv6IRgGI7NBuGKj7GvkcwbLrBar7vxjpOafhA-t67cbVsaQ/exec',
             API_KEY: 'AIzaSyCXCHIB8bLk27t9_pVQ7LK3jX4F64lbyH4',
             // [NEW] ถ้า deploy บนโฮสต์ที่รองรับ PHP (ไม่ใช่ GitHub Pages) และต้องการใช้ proxy.php
             // เพื่อซ่อน API_KEY ไว้ฝั่งเซิร์ฟเวอร์ ให้ใส่ URL ของ proxy.php ที่นี่ เช่น '/proxy.php'
@@ -46,6 +47,30 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+        /* [NEW] Animated Shine สำหรับ Level Hero Card */
+        @keyframes shine {
+            0% { transform: translateX(-150%) skewX(-12deg); }
+            60% { transform: translateX(250%) skewX(-12deg); }
+            100% { transform: translateX(250%) skewX(-12deg); }
+        }
+        .animate-shine { animation: shine 3.5s ease-in-out infinite; }
+
+        #recordFabAnim {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #recordFabAnim svg {
+            width: 100% !important;
+            height: 100% !important;
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col relative overflow-x-hidden">
@@ -75,6 +100,7 @@
                         <div class="text-right hidden md:block">
                             <p class="text-xs text-slate-500">ยินดีต้อนรับ</p>
                             <p class="text-sm font-bold text-slate-700" id="nav-username">นักศึกษา NRRU</p>
+                            <span id="admin-badge" class="hidden inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200">ADMIN</span>
                         </div>
                         <div class="h-10 w-10 bg-black rounded-full flex items-center justify-center overflow-hidden border-2 border-emerald-500 shadow-sm">
                             <img src="logoImage\logo.png" alt="Profile" class="h-full w-full object-cover">
@@ -231,39 +257,115 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden mb-10">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden mb-10">
                 <div class="relative z-10">
                     <h3 class="text-lg font-bold mb-4 flex items-center text-slate-800">
-                        <i class="fa-solid fa-graduation-cap mr-2 text-emerald-500"></i> Top 5 Majors (สาขายอดเยี่ยม)
+                        <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i> กิจกรรมล่าสุด
                     </h3>
-                    <div class="space-y-3" id="majorRankingList">
-                        <!-- JS Will Populate -->
+                    
+                    <div class="space-y-4" id="globalActivityFeed">
+                        <!-- Feed items will be inserted here by JS -->
                     </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-bold text-slate-800 flex items-center">
-                        <i class="fa-solid fa-rss text-emerald-500 mr-2"></i> กิจกรรมล่าสุด
-                    </h3>
-                    <span class="bg-emerald-100 text-emerald-700 text-xs px-3 py-1 rounded-full font-semibold">Live Updates</span>
-                </div>
-                
-                <div class="space-y-4" id="globalActivityFeed">
-                    <!-- Feed items will be inserted here by JS -->
                 </div>
             </div>
         </div>
 
         <div id="privateDashboard" class="hidden animate-fade-in">
             
-            <div class="flex items-center space-x-4 mb-6">
+            <div class="mb-6">
                 <h2 class="text-2xl font-bold text-slate-800">แดชบอร์ดของคุณ</h2>
+                <p class="text-sm text-slate-500 mt-0.5">นี่คือพื้นที่ของฉัน — ความสำเร็จและความดีที่คุณสะสมไว้</p>
             </div>
 
-            <!-- Personal Stats & Level -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- === Personal Profile Hero Section === -->
+            <div id="profileHeroSection" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8 mb-6 relative overflow-hidden">
+                <div class="flex flex-col md:flex-row md:items-center gap-6">
+                    <!-- Avatar + ชื่อผู้ใช้ -->
+                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                        <div id="profileAvatar" class="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-2xl md:text-3xl font-black shadow-lg shadow-emerald-500/30 ring-4 ring-emerald-100">
+                            <span id="profileAvatarInitials">NR</span>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 id="profileFullName" class="text-xl md:text-2xl font-bold text-slate-800 truncate">นักศึกษา NRRU</h3>
+                            <p class="text-sm text-slate-500 mt-0.5">
+                                <i class="fa-solid fa-id-card text-slate-400 mr-1"></i>
+                                <span id="profileStudentId">-</span>
+                            </p>
+                            <p class="text-sm text-slate-500 mt-0.5 truncate">
+                                <i class="fa-solid fa-building-columns text-slate-400 mr-1"></i>
+                                <span id="profileFaculty">-</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Rank Personal (เฉพาะอันดับของฉัน ไม่แสดงรายชื่อคนอื่น) -->
+                    <div class="flex gap-3 flex-shrink-0">
+                        <div class="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 text-center min-w-[104px]">
+                            <p class="text-[10px] font-semibold text-emerald-600 mb-1 tracking-wide">อันดับในคณะ</p>
+                            <p class="text-xl font-black text-emerald-700"><span id="profileFacultyRank">-</span></p>
+                            <p class="text-[10px] text-emerald-500" id="profileFacultyRankTotal"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === Level Hero Card (Badge เด่นที่สุดของหน้า) === -->
+            <div id="levelHeroCard" class="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 rounded-3xl p-6 md:p-10 shadow-2xl shadow-emerald-600/30 text-white mb-6">
+                <!-- Background Decoration (ใช้ชุดเดียวกับ Hero Banner ของ Guest Mode) -->
+                <div class="absolute top-0 right-0 -mr-16 -mt-16 w-56 h-56 rounded-full bg-white opacity-10 blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-amber-300 opacity-20 blur-3xl"></div>
+                <!-- Animated Shine -->
+                <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div class="absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine"></div>
+                </div>
+
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div class="flex items-center gap-4">
+                        <div id="levelBgIcon" class="text-6xl md:text-7xl drop-shadow-lg animate-float">🌱</div>
+                        <div>
+                            <p class="text-emerald-100 text-xs font-bold tracking-wider uppercase mb-1">ระดับนักอนุรักษ์ (Badge)</p>
+                            <h3 class="text-2xl md:text-4xl font-black tracking-wide drop-shadow-md flex items-center gap-2">
+                                <span id="personalLevelIcon">🌱</span>
+                                <span id="personalLevelName">Green Seed</span>
+                            </h3>
+                            <p class="text-emerald-50/90 text-sm mt-1">Green Point : <span id="levelPointsCounter" class="font-bold text-amber-300" data-current="0">0</span></p>
+                        </div>
+                    </div>
+                    <button onclick="downloadPortfolio()" class="bg-white/15 hover:bg-white/25 border border-white/20 text-white text-sm font-semibold py-2.5 px-5 rounded-xl transition flex items-center justify-center shadow-sm backdrop-blur-sm">
+                        <i class="fa-solid fa-file-pdf text-red-300 mr-2"></i> ใช้เป็น Portfolio (ดาวน์โหลด)
+                    </button>
+                </div>
+
+                <div class="relative z-10 mt-6">
+                    <div class="flex justify-between text-xs md:text-sm text-emerald-50 mb-2">
+                        <span id="levelProgressText">0 / 100 Pt</span>
+                        <span id="levelNextText">Next: Green Tree</span>
+                    </div>
+                    <div class="w-full bg-black/20 rounded-full h-4 shadow-inner overflow-hidden border border-white/10">
+                        <div id="levelProgressBar" class="bg-gradient-to-r from-amber-300 to-amber-500 h-full rounded-full transition-all duration-1000 relative shadow-[0_0_12px_rgba(251,191,36,0.6)]" style="width: 0%">
+                            <div class="absolute top-0 right-0 bottom-0 left-0 bg-white/20 animate-pulse"></div>
+                        </div>
+                    </div>
+                    <p id="levelRemainingText" class="text-xs text-emerald-100 mt-2"></p>
+                </div>
+            </div>
+
+            <!-- === Achievement System === -->
+            <div id="achievementSection" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 mb-6">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-trophy text-amber-500 mr-2"></i> ความสำเร็จของคุณ (Achievements)
+                </h3>
+                <div id="achievementGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- JS Will Populate -->
+                </div>
+            </div>
+
+            <!-- [FUTURE] เตรียมพื้นที่สำหรับระบบ Social ในอนาคต (Friend System, Faculty/Major Battle,
+                 Team Challenge, Weekly Challenge, Leaderboard) — ยังไม่เปิดใช้งานในเวอร์ชันนี้ -->
+            <div id="socialHubSection" class="hidden mb-6"></div>
+
+            <!-- Personal Stats (Green Point / Carbon) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div class="bg-white rounded-2xl shadow-sm p-5 flex items-center border-l-4 border-emerald-500">
                     <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mr-4">
                         <i class="fa-solid fa-star text-emerald-500 text-xl"></i>
@@ -286,43 +388,84 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Level / Badge Card -->
-                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-sm p-4 flex flex-col justify-between border-l-4 border-amber-400 relative overflow-hidden transform transition hover:-translate-y-1">
-                    <div class="absolute -right-2 -top-2 opacity-20 text-6xl" id="levelBgIcon">🌱</div>
-                    <div class="flex justify-between items-start mb-2 relative z-10">
-                        <div>
-                            <p class="text-slate-300 text-xs font-medium">ระดับนักอนุรักษ์ (Badge)</p>
-                            <div class="flex items-baseline space-x-2 mt-1">
-                                <span id="personalLevelIcon" class="text-2xl drop-shadow-md">🌱</span>
-                                <span id="personalLevelName" class="text-lg font-bold text-white tracking-wide">Green Seed</span>
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i> ประวัติการทำกิจกรรมของคุณ
+                            </h3>
+                        </div>
+                        
+                        <div id="historyControls" class="mb-4 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                            <div class="flex-1">
+                                <input id="historySearch" type="text" placeholder="ค้นหาประวัติ..." class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                            </div>
+                            <div class="min-w-[180px]">
+                                <select id="historyFilter" class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                    <option value="all">ทุกประเภท</option>
+                                    <option value="snack">ซองขนม</option>
+                                    <option value="milk">กล่องนม</option>
+                                    <option value="can">กล่องอลูมิเนียม</option>
+                                    <option value="cap">ฝาขวดน้ำ</option>
+                                    <option value="pet">ขวด PET</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="relative z-10 mt-1">
-                        <div class="flex justify-between text-[10px] text-slate-400 mb-1.5">
-                            <span id="levelProgressText">0 / 100 Pt</span>
-                            <span id="levelNextText">Next: Green Tree</span>
+                    <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-slate-500 bg-slate-50 uppercase rounded-t-xl">
+                                    <tr>
+                                        <th class="px-3 py-3 rounded-tl-xl">วันที่</th>
+                                        <th class="px-3 py-3 text-center">หลักฐาน</th>
+                                        <th class="px-3 py-3">ประเภท</th>
+                                        <th class="px-3 py-3 text-center">จำนวน/น้ำหนัก</th>
+                                        <th class="px-3 py-3 text-right">Green Pt.</th>
+                                        <th class="px-3 py-3 text-right">Carbon Pt. (kgCO₂)</th>
+                                        <th class="px-3 py-3 text-right rounded-tr-xl">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="personalHistoryTable" class="divide-y divide-slate-100">
+                                    <!-- User history will be inserted here -->
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="w-full bg-slate-700/50 rounded-full h-2 mb-3 shadow-inner overflow-hidden">
-                            <div id="levelProgressBar" class="bg-gradient-to-r from-amber-300 to-amber-500 h-2 rounded-full transition-all duration-1000 relative" style="width: 0%">
-                                <div class="absolute top-0 right-0 bottom-0 left-0 bg-white/20 animate-pulse"></div>
+                        
+                        <!-- Empty State -->
+                        <div id="emptyHistoryState" class="py-10 text-center hidden">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-3 text-slate-300">
+                                <i class="fa-solid fa-box-open text-2xl"></i>
                             </div>
+                            <p class="text-slate-500 font-medium" id="emptyTitle">ยังไม่มีประวัติการทำกิจกรรม</p>
+                            <p class="text-xs text-slate-400 mt-1" id="emptySubtitle">มาร่วมรักษ์โลกด้วยการส่งขยะรีไซเคิลกันเถอะ</p>
                         </div>
-                        <button onclick="downloadPortfolio()" class="w-full bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white text-xs py-1.5 rounded-lg transition flex items-center justify-center shadow-sm">
-                            <i class="fa-solid fa-file-pdf text-red-400 mr-2"></i> ใช้เป็น Portfolio (ดาวน์โหลด)
-                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Action Area (Form) -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sticky top-24">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">บันทึกการส่งขยะ</h3>
-                        
+            <!-- Floating Action Button -->
+            <button id="recordFab" onclick="toggleRecordModal()" class="sticky bottom-8 right-8 z-50 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full text-sm font-medium transition-colors shadow-md shadow-emerald-600/20 flex items-center relative overflow-hidden">
+                <div id="recordFabAnim"></div>
+                <span class="relative z-10 flex items-center">
+                    <i class="fa-solid fa-plus mr-2"></i> บันทึกการส่งขยะ
+                </span>
+            </button>
+
+            <!-- Record Form Modal -->
+            <div id="recordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 p-4">
+                <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-center relative">
+                        <button onclick="toggleRecordModal()" class="absolute top-4 right-4 text-white/70 hover:text-white transition">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                        <div class="w-20 h-20 mx-auto bg-black rounded-full p-1 shadow-lg mb-3">
+                            <img src="logoImage\BookBotImage1.png" alt="Mascot" class="w-full h-full object-cover rounded-full">
+                        </div>
+                        <h3 class="text-white font-bold text-xl tracking-wide">บันทึกการส่งขยะ</h3>
+                    </div>
+                    <div class="p-6">
                         <form id="recordForm" onsubmit="submitRecord(event)" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">ประเภทวัสดุรีไซเคิล</label>
@@ -342,11 +485,8 @@
                                     <input type="number" id="wasteQty" min="1" required oninput="calculateWeight()" class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500 transition-colors" placeholder="เช่น 10">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">
-                                        น้ำหนักสุทธิ (kg) 
-                                        <span class="text-[10px] font-normal text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded ml-1">แก้ไขได้</span>
-                                    </label>
-                                    <input type="number" id="wasteWeight" min="0.001" step="0.001" required class="w-full rounded-xl border-emerald-300 bg-emerald-50/50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500 transition-colors font-medium text-emerald-700" placeholder="0.000">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">น้ำหนักสุทธิ (kg)</label>
+                                    <input type="number" id="wasteWeight" min="0.001" step="0.001" required class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500 transition-colors" placeholder="0.000" readonly>
                                 </div>
                             </div>
                             
@@ -388,48 +528,16 @@
                                 <input type="hidden" id="imageDataString" value="">
                             </div>
 
+                            <div id="editActionBar" class="hidden items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                                <span><i class="fa-solid fa-pen-to-square mr-2"></i>กำลังแก้ไขบันทึก</span>
+                                <button type="button" onclick="cancelEditRecord()" class="text-xs font-semibold text-amber-700 hover:text-amber-800">ยกเลิก</button>
+                            </div>
+
                             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/30 transition-all hover:-translate-y-0.5 mt-4">
                                 <i class="fa-solid fa-plus-circle mr-2"></i> บันทึกข้อมูล
                             </button>
+                            <input type="hidden" id="editingLogId" value="">
                         </form>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 overflow-hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-bold text-slate-800 flex items-center">
-                                <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i> ประวัติการทำกิจกรรมของคุณ
-                            </h3>
-                        </div>
-                        
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left">
-                                <thead class="text-xs text-slate-500 bg-slate-50 uppercase rounded-t-xl">
-                                    <tr>
-                                        <th class="px-3 py-3 rounded-tl-xl">วันที่</th>
-                                        <th class="px-3 py-3 text-center">หลักฐาน</th>
-                                        <th class="px-3 py-3">ประเภท</th>
-                                        <th class="px-3 py-3 text-center">จำนวน/น้ำหนัก</th>
-                                        <th class="px-3 py-3 text-right">Green Pt.</th>
-                                        <th class="px-3 py-3 text-right">Carbon Pt. (kgCO₂)</th>
-                                        <th class="px-3 py-3 text-right rounded-tr-xl">จัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="personalHistoryTable" class="divide-y divide-slate-100">
-                                    <!-- User history will be inserted here -->
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Empty State -->
-                        <div id="emptyHistoryState" class="py-10 text-center hidden">
-                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-3 text-slate-300">
-                                <i class="fa-solid fa-box-open text-2xl"></i>
-                            </div>
-                            <p class="text-slate-500 font-medium">ยังไม่มีประวัติการทำกิจกรรม</p>
-                            <p class="text-xs text-slate-400 mt-1">มาร่วมรักษ์โลกด้วยการส่งขยะรีไซเคิลกันเถอะ</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -492,11 +600,11 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">เบอร์โทรศัพท์</label>
-                            <input type="tel" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="08x-xxx-xxxx">
+                            <input type="tel" id="regPhone" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="08x-xxx-xxxx">
                         </div>
-                        <div class="col-span-2">
-                            <label class="block text-xs font-medium text-slate-700 mb-1">สาขา/คณะ/หน่วยงาน</label>
-                            <input type="text" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="คณะวิทยาศาสตร์">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">คณะ</label>
+                            <input type="text" id="regFaculty" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="คณะวิทยาศาสตร์">
                         </div>
                         <div class="col-span-2">
                             <label class="block text-xs font-medium text-slate-700 mb-1">อีเมล (ใช้เป็น User เข้าสู่ระบบ)</label>
@@ -601,7 +709,7 @@
                     const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: this.getHeaders(),
-                        
+                        // apiKey แนบไปใน body เสมอ (ไม่พึ่ง Header) เพื่อให้ทำงานได้ทั้งสองโหมด
                         body: JSON.stringify({ action, payload, apiKey: this.config.apiKey })
                     });
 
@@ -662,8 +770,8 @@
                 return this.request('getFacultyRanking', payload);
             }
 
-            async getMajorRanking(payload) {
-                return this.request('getMajorRanking', payload);
+            async getUserRank(payload) {
+                return this.request('getUserRank', payload);
             }
         }
 
@@ -675,7 +783,7 @@
             userProfile: null,
             carbonLogs: [],
             facultyRanking: [],
-            majorRanking: []
+            rankInfo: null
         };
         let globalRecords = [
             { id: 1, userMask: 'บุคลากร ***45', type: 'ขวด PET (ใส)', typeId: 'pet', qty: 20, weight: 0.3, point: 30, carbon: 0.690, date: '10 นาทีที่แล้ว', img: '' },
@@ -812,7 +920,7 @@
             }
 
             if (!document.getElementById('dashboardInsights')) {
-                const mainGrid = document.querySelector('#privateDashboard > .grid.grid-cols-1.lg\\:grid-cols-3.gap-6');
+                const mainGrid = document.querySelector('#privateDashboard > .grid.grid-cols-1.gap-6');
                 if (mainGrid) {
                     mainGrid.insertAdjacentHTML('beforebegin', `
                         <div id="dashboardInsights" class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
@@ -867,11 +975,14 @@
         };
 
         async function initializeApp() {
-            await loadDashboardData();
-            updateGlobalStats();
-            updatePersonalDashboard();
-            renderCarbonChart();
-            renderRankings();
+            const restored = await restoreSession();
+            if (!restored) {
+                await loadDashboardData();
+                updateGlobalStats();
+                updatePersonalDashboard();
+                renderCarbonChart();
+                renderRankings();
+            }
         }
 
         // --- ระบบ Authentication UI ---
@@ -882,15 +993,71 @@
                 modal.classList.remove('opacity-0');
                 document.getElementById('authModalContent').classList.remove('scale-95');
             }, 10);
+            attachFloatingEffect(modal, document.getElementById('authModalContent'));
         }
 
         function closeLoginModal() {
             const modal = document.getElementById('authModal');
             modal.classList.add('opacity-0');
             document.getElementById('authModalContent').classList.add('scale-95');
+            detachFloatingEffect(modal);
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 300);
+        }
+
+        function toggleRecordModal() {
+            const modal = document.getElementById('recordModal');
+            const fab = document.getElementById('recordFab');
+            if (modal.classList.contains('hidden')) {
+                if (fab) fab.classList.add('hidden');
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.bg-white').classList.remove('scale-95');
+                }, 10);
+                attachFloatingEffect(modal, modal.querySelector('.bg-white'));
+            } else {
+                modal.classList.add('opacity-0');
+                modal.querySelector('.bg-white').classList.add('scale-95');
+                detachFloatingEffect(modal);
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    if (fab) fab.classList.remove('hidden');
+                }, 300);
+            }
+        }
+
+        function attachFloatingEffect(modal, card) {
+            const onMove = (e) => {
+                const rect = modal.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const moveX = ((x - centerX) / centerX) * 8;
+                const moveY = ((y - centerY) / centerY) * 8;
+                card.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            };
+            const onLeave = () => {
+                card.style.transform = 'translate(0px, 0px)';
+            };
+            modal._floatingHandler = onMove;
+            modal._floatingLeave = onLeave;
+            modal.addEventListener('mousemove', onMove);
+            modal.addEventListener('mouseleave', onLeave);
+        }
+
+        function detachFloatingEffect(modal) {
+            if (!modal) return;
+            if (modal._floatingHandler) {
+                modal.removeEventListener('mousemove', modal._floatingHandler);
+                modal.removeEventListener('mouseleave', modal._floatingLeave);
+                modal._floatingHandler = null;
+                modal._floatingLeave = null;
+            }
+            const card = modal.querySelector('.bg-white');
+            if (card) card.style.transform = '';
         }
 
         function switchTab(tab) {
@@ -944,19 +1111,22 @@
             const iconClass = isError ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-check text-xl';
             
             const msgBox = document.createElement('div');
-            msgBox.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[150] animate-fade-in flex items-center border border-slate-700';
+            msgBox.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[150] animate-fade-in flex items-center border border-slate-700 opacity-0 transition-opacity duration-500';
             msgBox.innerHTML = `
                 <div class="${iconContainerClass}">
                     <i class="${iconClass}"></i>
                 </div>
-                <div>
+                <div class="text-center">
                     <h4 class="font-bold text-sm">${title}</h4>
                     <p class="text-xs text-slate-300">${subtitle}</p>
                 </div>
             `;
             document.body.appendChild(msgBox);
             setTimeout(() => {
-                msgBox.classList.add('opacity-0', 'transition-opacity', 'duration-500', 'transform', '-translate-y-4');
+                msgBox.classList.remove('opacity-0');
+            }, 10);
+            setTimeout(() => {
+                msgBox.classList.add('opacity-0');
                 setTimeout(() => msgBox.remove(), 500);
             }, 3000);
         }
@@ -965,6 +1135,25 @@
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
+            
+            if (email === 'admin@nrru.ac.th' && password === '123456') {
+                currentUser = {
+                    name: 'Admin',
+                    email: email,
+                    isAdmin: true
+                };
+                currentUserProfile = {
+                    Username: 'Admin',
+                    Faculty: 'Administration',
+                    TotalGreenPoint: 9999,
+                    TotalCarbonSaved: 9999,
+                    JoinDate: new Date().toISOString(),
+                    LastActive: new Date().toISOString()
+                };
+                await completeAuth('Admin', currentUserProfile);
+                return;
+            }
+            
             const result = await greenService.loginUser({ email, password });
 
             if (!result?.success) {
@@ -987,9 +1176,8 @@
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
             const studentId = document.getElementById('regId').value.trim();
-            const phone = document.querySelector('#registerForm input[type="tel"]').value.trim();
-            const faculty = document.querySelector('#registerForm input[placeholder="คณะวิทยาศาสตร์"]').value.trim();
-            const major = faculty || 'CS';
+            const phone = document.getElementById('regPhone').value.trim();
+            const faculty = document.getElementById('regFaculty').value.trim();
 
             const result = await greenService.registerUser({
                 name,
@@ -997,8 +1185,7 @@
                 password,
                 studentId,
                 phone,
-                faculty,
-                major
+                faculty
             });
 
             if (!result?.success) {
@@ -1015,7 +1202,9 @@
             await completeAuth(profile.Username || currentUser.name, profile);
         }
         
-        async function completeAuth(displayName, profile = null) {
+        async function completeAuth(displayName, profile = null, options = {}) {
+            const { silent = false, persist = true } = options;
+
             closeLoginModal();
             document.getElementById('nav-guest').classList.add('hidden');
             document.getElementById('nav-logged-in').classList.remove('hidden');
@@ -1023,10 +1212,26 @@
             
             document.getElementById('nav-username').textContent = displayName;
             
+            const adminBadge = document.getElementById('admin-badge');
+            if (currentUser?.isAdmin && adminBadge) {
+                adminBadge.classList.remove('hidden');
+            } else if (adminBadge) {
+                adminBadge.classList.add('hidden');
+            }
+            
+            // [FIX] เปลี่ยนจาก Public Dashboard เป็น Personal Dashboard ทันที และซ่อนข้อมูลรวมของทั้งระบบ
+            document.getElementById('publicDashboard').classList.add('hidden');
             document.getElementById('privateDashboard').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('privateDashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 300);
+
+            if (!silent) {
+                setTimeout(() => {
+                    document.getElementById('privateDashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+
+            if (persist) {
+                saveSession();
+            }
 
             await loadDashboardData();
             updatePersonalDashboard();
@@ -1034,25 +1239,92 @@
             renderCarbonChart();
             renderRankings();
 
-            showMessage('ยินดีต้อนรับเข้าสู่ระบบ', `คุณ ${displayName} เริ่มสะสมความดีได้เลย!`);
+            if (!silent) {
+                showMessage('ยินดีต้อนรับเข้าสู่ระบบ', `คุณ ${displayName} เริ่มสะสมแต้มโลกสีเขียวได้เลย!`);
+            }
         }
 
         function logout() {
             currentUser = null;
             currentUserProfile = null;
-            dashboardData = { userProfile: null, carbonLogs: [], facultyRanking: [], majorRanking: [] };
+            dashboardData = { userProfile: null, carbonLogs: [], facultyRanking: [], rankInfo: null };
             userRecords = [];
-            
+
+            clearSession();
+
             document.getElementById('nav-guest').classList.remove('hidden');
             document.getElementById('nav-logged-in').classList.add('hidden');
             document.getElementById('nav-logged-in').classList.remove('flex');
             document.getElementById('privateDashboard').classList.add('hidden');
+            // [FIX] กลับสู่ Public Dashboard เฉพาะตอน Logout เท่านั้น
+            document.getElementById('publicDashboard').classList.remove('hidden');
+            
+            const adminBadge = document.getElementById('admin-badge');
+            if (adminBadge) adminBadge.classList.add('hidden');
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
             updatePersonalDashboard();
             updateGlobalStats();
             showMessage('ออกจากระบบเรียบร้อย', 'แล้วพบกันใหม่ Carbon Hero!');
+        }
+
+        // === Login Persistence (Session ผ่าน localStorage) ===
+        const SESSION_STORAGE_KEY = 'nrru_green_session';
+
+        function saveSession() {
+            try {
+                const sessionPayload = {
+                    email: currentUser?.email || '',
+                    name: currentUser?.name || '',
+                    isAdmin: !!currentUser?.isAdmin,
+                    savedAt: Date.now()
+                };
+                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionPayload));
+            } catch (err) {
+                console.warn('ไม่สามารถบันทึก Session ได้:', err);
+            }
+        }
+
+        function clearSession() {
+            try {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+            } catch (err) {
+                console.warn('ไม่สามารถล้าง Session ได้:', err);
+            }
+        }
+
+        function loadSession() {
+            try {
+                const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        // เมื่อ Refresh หน้าเว็บ หากพบ Session ที่ยังไม่ Logout ให้กลับสู่ Personal Dashboard ทันที
+        async function restoreSession() {
+            const session = loadSession();
+            if (!session || !session.email) return false;
+
+            if (session.isAdmin) {
+                currentUser = { name: session.name || 'Admin', email: session.email, isAdmin: true };
+                currentUserProfile = {
+                    Username: 'Admin',
+                    Faculty: 'Administration',
+                    TotalGreenPoint: 9999,
+                    TotalCarbonSaved: 9999,
+                    JoinDate: new Date().toISOString(),
+                    LastActive: new Date().toISOString()
+                };
+                await completeAuth('Admin', currentUserProfile, { silent: true, persist: false });
+                return true;
+            }
+
+            currentUser = { name: session.name || session.email.split('@')[0], email: session.email };
+            await completeAuth(currentUser.name, null, { silent: true, persist: false });
+            return true;
         }
 
         // --- จัดการรูปภาพ ---
@@ -1113,13 +1385,19 @@
             const qtyStr = document.getElementById('wasteQty').value;
             
             if(!type || !qtyStr) {
+                document.getElementById('wasteWeight').value = "0.000";
                 document.getElementById('previewPt').textContent = "0";
                 document.getElementById('previewCb').textContent = "0.000";
                 return;
             }
 
             const qty = parseInt(qtyStr);
-            if(qty <= 0) return;
+            if(qty <= 0) {
+                document.getElementById('wasteWeight').value = "0.000";
+                document.getElementById('previewPt').textContent = "0";
+                document.getElementById('previewCb').textContent = "0.000";
+                return;
+            }
 
             const estWeight = qty * avgWeightPerItem[type];
             document.getElementById('wasteWeight').value = estWeight.toFixed(3);
@@ -1149,6 +1427,7 @@
 
         async function submitRecord(e) {
             e.preventDefault();
+            toggleRecordModal();
             
             const typeId = document.getElementById('wasteType').value;
             const qty = parseInt(document.getElementById('wasteQty').value);
@@ -1207,7 +1486,7 @@
                 } else {
                     const newRecord = {
                         id: Date.now(),
-                        userMask: currentUser?.name || 'คุณ',
+                        userMask: maskUsername(currentUser?.name || 'คุณ'),
                         typeId,
                         type: getWasteLabel(typeId),
                         qty,
@@ -1218,6 +1497,7 @@
                         img: imgData,
                         dateTime: new Date().toISOString(),
                         username: currentUser?.name || 'คุณ',
+                        userMask: maskUsername(currentUser?.name || 'คุณ'),
                         status: 'Approved'
                     };
                     userRecords.unshift(newRecord);
@@ -1241,6 +1521,22 @@
             if (editBar) editBar.classList.add('hidden');
         }
 
+        function cancelEditRecord() {
+            document.getElementById('editingLogId').value = '';
+            document.getElementById('imageDataString').value = '';
+            document.getElementById('imagePreview').src = '';
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('imagePreviewContainer').classList.remove('flex');
+            document.getElementById('wasteType').value = '';
+            document.getElementById('wasteQty').value = '';
+            document.getElementById('wasteWeight').value = '';
+            document.getElementById('previewPt').textContent = '0';
+            document.getElementById('previewCb').textContent = '0.000';
+            const editBar = document.getElementById('editActionBar');
+            if (editBar) editBar.classList.add('hidden');
+        }
+
         function startEditRecord(logId) {
             const target = userRecords.find(item => String(item.id) === String(logId));
             if (!target) return;
@@ -1256,21 +1552,29 @@
             calculatePreview();
             const editBar = document.getElementById('editActionBar');
             if (editBar) editBar.classList.remove('hidden');
-            document.getElementById('privateDashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            toggleRecordModal();
         }
 
         async function deleteLogRecord(logId) {
             const confirmed = window.confirm('ต้องการลบบันทึกนี้ใช่หรือไม่');
             if (!confirmed) return;
-            const payload = { logId, userEmail: currentUser?.email };
-            const result = await greenService.deleteCarbonLog(payload);
-            if (result && result.success) {
-                showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
-            } else {
+            
+            if (currentUser?.isAdmin) {
                 userRecords = userRecords.filter(item => String(item.id) !== String(logId));
                 globalRecords = globalRecords.filter(item => String(item.id) !== String(logId));
                 showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
+            } else {
+                const payload = { logId, userEmail: currentUser?.email };
+                const result = await greenService.deleteCarbonLog(payload);
+                if (result && result.success) {
+                    showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
+                } else {
+                    userRecords = userRecords.filter(item => String(item.id) !== String(logId));
+                    globalRecords = globalRecords.filter(item => String(item.id) !== String(logId));
+                    showMessage('ลบสำเร็จ', 'บันทึกถูกลบเรียบร้อยแล้ว');
+                }
             }
+            
             await loadDashboardData();
             updatePersonalDashboard();
             updateGlobalStats();
@@ -1289,8 +1593,9 @@
             let totalCb = 0;
             const profileTotalPt = Number(currentUserProfile?.TotalGreenPoint || 0);
             const profileTotalCb = Number(currentUserProfile?.TotalCarbonSaved || 0);
-            const visibleRecords = userRecords.filter(record => {
-                const searchText = `${record.type || ''} ${record.username || ''}`.toLowerCase();
+            const sourceRecords = currentUser?.isAdmin ? globalRecords : userRecords;
+            const visibleRecords = sourceRecords.filter(record => {
+                const searchText = `${record.type || ''} ${record.username || record.userMask || ''}`.toLowerCase();
                 const matchesSearch = historyFilters.search ? searchText.includes(historyFilters.search) : true;
                 const matchesFilter = historyFilters.filter === 'all' || record.typeId === historyFilters.filter;
                 return matchesSearch && matchesFilter;
@@ -1301,6 +1606,16 @@
                 document.getElementById('personalGreenPoints').textContent = profileTotalPt.toLocaleString();
                 document.getElementById('personalCarbonPoints').textContent = profileTotalCb.toFixed(3);
                 updateLevelBadge(profileTotalPt);
+                renderProfileHero();
+                renderAchievements();
+                renderSocialHub();
+                if (currentUser?.isAdmin) {
+                    document.getElementById('emptyTitle').textContent = 'ยังไม่มีข้อมูลในระบบ';
+                    document.getElementById('emptySubtitle').textContent = 'Admin Panel - ดู/ลบข้อมูลทั้งหมดได้ที่นี่';
+                } else {
+                    document.getElementById('emptyTitle').textContent = 'ยังไม่มีประวัติการทำกิจกรรม';
+                    document.getElementById('emptySubtitle').textContent = 'มาร่วมรักษ์โลกด้วยการส่งขยะรีไซเคิลกันเถอะ';
+                }
                 return;
             } else {
                 emptyState.classList.add('hidden');
@@ -1340,6 +1655,9 @@
             
             updateLevelBadge(profileTotalPt || totalPt);
             renderRecentActivities();
+            renderProfileHero();
+            renderAchievements();
+            renderSocialHub();
         }
 
         function updateLevelBadge(points) {
@@ -1382,6 +1700,122 @@
             }
             
             document.getElementById('levelProgressBar').style.width = `${progress}%`;
+
+            // [NEW] ข้อความ "ต้องการอีก X Point" และ XP Counter Animation
+            const remaining = levelName === 'Green Champion' ? 0 : Math.max(max - points, 0);
+            const remainingEl = document.getElementById('levelRemainingText');
+            if (remainingEl) {
+                remainingEl.textContent = levelName === 'Green Champion'
+                    ? '🎉 คุณอยู่ในระดับสูงสุดแล้ว!'
+                    : `ต้องการอีก ${remaining.toLocaleString()} Point`;
+            }
+
+            const counterEl = document.getElementById('levelPointsCounter');
+            if (counterEl) {
+                const from = Number(counterEl.dataset.current || 0);
+                animateCounter(counterEl, from, points, 800);
+                counterEl.dataset.current = points;
+            }
+        }
+
+        function animateCounter(el, from, to, duration = 800) {
+            const start = performance.now();
+            const diff = to - from;
+            function step(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const value = Math.round(from + diff * progress);
+                el.textContent = value.toLocaleString();
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        // === Achievement System ===
+        const achievementDefinitions = [
+            { id: 'first_recycle', icon: '🥉', name: 'First Recycle', desc: 'ส่งขยะครั้งแรก', check: (ctx) => ctx.logCount >= 1 },
+            { id: 'carbon_saver', icon: '🥈', name: 'Carbon Saver', desc: 'ลดคาร์บอนเกิน 10 kg', check: (ctx) => ctx.totalCarbon >= 10 },
+            { id: 'eco_hero', icon: '🥇', name: 'Eco Hero', desc: 'สะสม 1,000 Green Point', check: (ctx) => ctx.totalPoint >= 1000 },
+            { id: 'green_champion', icon: '🏆', name: 'Green Champion', desc: 'สะสม 10,000 Green Point', check: (ctx) => ctx.totalPoint >= 10000 }
+            // [FUTURE] เพิ่ม Achievement ใหม่ได้ที่นี่ เช่น Achievement ที่ผูกกับ Friend/Team/Weekly Challenge
+        ];
+
+        function renderAchievements() {
+            const grid = document.getElementById('achievementGrid');
+            if (!grid) return;
+
+            const ctx = {
+                logCount: currentUser?.isAdmin ? globalRecords.length : userRecords.length,
+                totalCarbon: Number(currentUserProfile?.TotalCarbonSaved || 0),
+                totalPoint: Number(currentUserProfile?.TotalGreenPoint || 0)
+            };
+
+            grid.innerHTML = achievementDefinitions.map(a => {
+                const unlocked = a.check(ctx);
+                return `
+                    <div class="rounded-2xl border p-3 text-center transition-all ${unlocked ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-70'}">
+                        <div class="text-3xl mb-1 ${unlocked ? '' : 'grayscale opacity-40'}">${a.icon}</div>
+                        <p class="text-xs font-bold ${unlocked ? 'text-amber-700' : 'text-slate-400'}">${a.name}</p>
+                        <p class="text-[10px] mt-0.5 ${unlocked ? 'text-amber-600/80' : 'text-slate-400'}">${a.desc}</p>
+                        ${unlocked
+                            ? '<p class="text-[9px] text-emerald-600 font-semibold mt-1"><i class="fa-solid fa-circle-check mr-0.5"></i>ปลดล็อกแล้ว</p>'
+                            : '<p class="text-[9px] text-slate-400 mt-1"><i class="fa-solid fa-lock mr-0.5"></i>ยังไม่ปลดล็อก</p>'}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // === Personal Profile Hero Section ===
+        function getInitials(name) {
+            if (!name) return 'NR';
+            const parts = name.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+            return name.trim().substring(0, 2).toUpperCase();
+        }
+
+        function renderProfileHero() {
+            const section = document.getElementById('profileHeroSection');
+            if (!section) return;
+
+            const profile = currentUserProfile || {};
+            const displayName = profile.Username || currentUser?.name || 'นักศึกษา NRRU';
+
+            document.getElementById('profileAvatarInitials').textContent = getInitials(displayName);
+            document.getElementById('profileFullName').textContent = displayName;
+            document.getElementById('profileStudentId').textContent = profile.StudentID || 'ไม่ระบุรหัสนักศึกษา';
+            document.getElementById('profileFaculty').textContent = profile.Faculty || 'ไม่ระบุคณะ';
+
+            const rankInfo = dashboardData.rankInfo || {};
+            document.getElementById('profileFacultyRank').textContent = rankInfo.facultyRank ? `#${rankInfo.facultyRank}` : '-';
+            document.getElementById('profileFacultyRankTotal').textContent = rankInfo.facultyTotal ? `จาก ${rankInfo.facultyTotal} คน` : '';
+        }
+
+        // === [FUTURE] Social Features Scaffold ===
+        // โครงสร้างข้อมูลเตรียมไว้สำหรับต่อยอดในอนาคต (Friend System, Faculty/Major Battle,
+        // Team Challenge, Weekly Challenge, Leaderboard) — ยังไม่เปิดใช้งานในเวอร์ชันนี้
+        const socialFeatureFlags = {
+            friends: false,
+            facultyBattle: false,
+            majorBattle: false,
+            teamChallenge: false,
+            weeklyChallenge: false,
+            leaderboard: false
+        };
+
+        let socialData = {
+            friends: [],          // [{ userId, name, status }]
+            teams: [],             // [{ teamId, name, memberIds: [] }]
+            challenges: [],        // [{ challengeId, type: 'weekly'|'facultyBattle'|'majorBattle', ... }]
+            leaderboardCache: []   // ผลลัพธ์ Leaderboard ล่าสุดที่ดึงมา (เมื่อเปิดใช้งานในอนาคต)
+        };
+
+        function renderSocialHub() {
+            // TODO: เปิดใช้งานเมื่อ Backend รองรับ endpoint สำหรับ Social Features
+            const section = document.getElementById('socialHubSection');
+            if (!section) return;
+            const anyEnabled = Object.values(socialFeatureFlags).some(Boolean);
+            section.classList.toggle('hidden', !anyEnabled);
         }
 
         function downloadPortfolio() {
@@ -1441,7 +1875,7 @@
                     userProfile: result.userProfile || result.profile || null,
                     carbonLogs: result.carbonLogs || [],
                     facultyRanking: result.facultyRanking || [],
-                    majorRanking: result.majorRanking || []
+                    rankInfo: result.rankInfo || null
                 };
                 currentUserProfile = dashboardData.userProfile;
                 userRecords = (dashboardData.carbonLogs || []).map(log => normalizeLogRecord(log, dashboardData.userProfile));
@@ -1468,13 +1902,14 @@
                 currentUserProfile = {
                     Username: currentUser?.name || 'คุณ',
                     Faculty: 'คณะวิทยาศาสตร์',
-                    Major: 'CS',
                     TotalGreenPoint: 0,
                     TotalCarbonSaved: 0,
                     JoinDate: new Date().toISOString(),
-                    LastActive: new Date().toISOString()
+                    LastActive: new Date().toISOString(),
+                    StudentID: ''
                 };
                 dashboardData.userProfile = currentUserProfile;
+                dashboardData.rankInfo = null;
                 userRecords = [];
             }
         }
@@ -1561,7 +1996,7 @@
             container.innerHTML = logs.length ? logs.map(log => `
                 <div class="rounded-2xl border border-slate-100 p-3 bg-slate-50/70">
                     <div class="flex items-center justify-between mb-2">
-                        <div class="font-semibold text-slate-700">${log.username || 'คุณ'}</div>
+                        <div class="font-semibold text-slate-700">${maskUsername(log.username || 'คุณ')}</div>
                         <div class="text-[11px] text-slate-400">${log.date}</div>
                     </div>
                     <div class="text-sm text-slate-600">${log.type} • ${log.qty} ชิ้น</div>
@@ -1631,7 +2066,6 @@
             const facultyContainer = document.getElementById('topFacultyList');
             if (!facultyContainer) return;
             const facultyData = [...(dashboardData.facultyRanking || [])].sort((a, b) => (b.TotalGreenPoint || 0) - (a.TotalGreenPoint || 0));
-            const majorData = [...(dashboardData.majorRanking || [])].sort((a, b) => (b.TotalGreenPoint || 0) - (a.TotalGreenPoint || 0));
             facultyContainer.innerHTML = facultyData.slice(0, 5).map((faculty, index) => `
                 <div class="flex items-center justify-between p-2.5 rounded-xl ${index === 0 ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100' : 'bg-slate-50 hover:bg-slate-100 border border-slate-100'} transition-colors group">
                     <div class="flex items-center">
@@ -1648,24 +2082,6 @@
                     </div>
                 </div>
             `).join('');
-            const majorContainer = document.getElementById('majorRankingList');
-            if (majorContainer) {
-                majorContainer.innerHTML = majorData.slice(0, 5).map((major, index) => `
-                    <div class="flex items-center justify-between p-2.5 rounded-xl ${index === 0 ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100' : 'bg-slate-50 hover:bg-slate-100 border border-slate-100'} transition-colors group">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 rounded-full ${index === 0 ? 'bg-gradient-to-br from-emerald-300 to-emerald-500 text-emerald-900' : 'bg-white text-slate-500 border border-slate-200'} font-bold flex items-center justify-center text-sm mr-3 shadow-sm group-hover:scale-110 transition-transform">
-                                ${index + 1}
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-700">${major.Major || major.name || 'ไม่ระบุ'}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-black text-emerald-600">${Number(major.TotalGreenPoint || 0).toLocaleString()} <span class="text-[10px] font-normal opacity-50">Pt</span></p>
-                        </div>
-                    </div>
-                `).join('');
-            }
         }
 
         function renderWasteChart() {
