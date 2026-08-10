@@ -49,6 +49,14 @@ function doPost(e) {
         return jsonResponse(getFacultyRanking(payload));
       case 'getMajorRanking':
         return jsonResponse(getMajorRanking(payload));
+      case 'getUserRank':
+        return jsonResponse(getUserRankForPayload(payload));
+      case 'getPublicDashboardData':
+        return jsonResponse(getPublicDashboardData());
+      case 'getPublicStats':
+        return jsonResponse(getPublicStats());
+      case 'getLevelStats':
+        return jsonResponse(getLevelStats());
       default:
         return jsonResponse({ success: false, error: 'Unknown action' }, 400);
     }
@@ -121,7 +129,8 @@ function ensureHeaders(sheet, headers) {
 
 function getUsersSheet() {
   const sheet = getSheet('Users');
-  ensureHeaders(sheet, ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password']);
+  // [NEW] เพิ่มคอลัมน์ StudentID และ Phone ต่อท้าย เพื่อไม่ให้กระทบตำแหน่งคอลัมน์เดิมของชีตที่มีอยู่แล้ว
+  ensureHeaders(sheet, ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password', 'StudentID', 'Phone']);
   return sheet;
 }
 
@@ -153,7 +162,7 @@ function getCellValue(row, headers, headerName, fallback = '') {
 function getOrCreateUser(userEmail, username) {
   const sheet = getUsersSheet();
   const values = sheet.getDataRange().getDisplayValues();
-  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password'];
+  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password', 'StudentID', 'Phone'];
   const rows = values.slice(1);
   // ทำให้เป็นตัวพิมพ์เล็กเสมอ ให้สอดคล้องกับ registerUser()/loginUser() ป้องกันการสร้าง user ซ้ำจากตัวพิมพ์ใหญ่/เล็กต่างกัน
   const userId = String(userEmail || `user-${Date.now()}`).trim().toLowerCase();
@@ -174,6 +183,8 @@ function getOrCreateUser(userEmail, username) {
     0,
     now,
     userEmail || '',
+    '',
+    '',
     ''
   ];
   sheet.appendRow(newRow);
@@ -187,7 +198,9 @@ function getOrCreateUser(userEmail, username) {
     TotalCarbonSaved: 0,
     LastActive: now,
     Email: userEmail || '',
-    Password: ''
+    Password: '',
+    StudentID: '',
+    Phone: ''
   };
 }
 
@@ -197,6 +210,8 @@ function registerUser(payload) {
   const username = String(payload.name || payload.username || userEmail.split('@')[0] || 'Guest');
   const faculty = String(payload.faculty || 'คณะวิทยาศาสตร์');
   const major = String(payload.major || 'CS');
+  const studentId = String(payload.studentId || payload.studentID || '');
+  const phone = String(payload.phone || '');
 
   if (!userEmail || !password) {
     return { success: false, error: 'Email and password are required' };
@@ -204,7 +219,7 @@ function registerUser(payload) {
 
   const sheet = getUsersSheet();
   const values = sheet.getDataRange().getDisplayValues();
-  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password'];
+  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password', 'StudentID', 'Phone'];
   const rows = values.slice(1);
   const existing = rows.find((row) => String(getCellValue(row, headers, 'Email', '')).toLowerCase() === userEmail);
   if (existing) {
@@ -212,7 +227,7 @@ function registerUser(payload) {
   }
 
   const now = new Date().toISOString();
-  sheet.appendRow([userEmail, username, faculty, major, now, 0, 0, now, userEmail, password]);
+  sheet.appendRow([userEmail, username, faculty, major, now, 0, 0, now, userEmail, password, studentId, phone]);
   const profile = {
     UserID: userEmail,
     Username: username,
@@ -223,7 +238,9 @@ function registerUser(payload) {
     TotalCarbonSaved: 0,
     LastActive: now,
     Email: userEmail,
-    Password: password
+    Password: password,
+    StudentID: studentId,
+    Phone: phone
   };
   return { success: true, userProfile: profile };
 }
@@ -268,13 +285,56 @@ function getDashboardData(payload) {
   const logs = getCarbonLogsByUser(user.UserID);
   const facultyRanking = getFacultyRanking(payload);
   const majorRanking = getMajorRanking(payload);
+  const rankInfo = getUserRankInfo(user.UserID, user.Faculty, user.Major);
   return {
     success: true,
     userProfile: user,
     carbonLogs: logs,
     facultyRanking: facultyRanking.ranking || [],
-    majorRanking: majorRanking.ranking || []
+    majorRanking: majorRanking.ranking || [],
+    rankInfo: rankInfo
   };
+}
+
+// [NEW] คำนวณอันดับส่วนตัวของผู้ใช้ "ภายในคณะ" และ "ภายในสาขา" ของตัวเอง
+// หมายเหตุ: คืนค่าเฉพาะตัวเลขอันดับ/จำนวนคนทั้งหมด ไม่เปิดเผยชื่อหรือคะแนนของผู้ใช้คนอื่น
+function getUserRankInfo(userId, faculty, major) {
+  const usersSheet = getUsersSheet();
+  const values = usersSheet.getDataRange().getDisplayValues();
+  if (values.length <= 1) {
+    return { facultyRank: 0, facultyTotal: 0, majorRank: 0, majorTotal: 0 };
+  }
+  const headers = values[0];
+  const rows = values.slice(1);
+
+  const buildRanked = (groupField, groupValue) => rows
+    .filter((row) => String(getCellValue(row, headers, groupField, '')) === String(groupValue))
+    .map((row) => ({
+      UserID: getCellValue(row, headers, 'UserID', ''),
+      TotalGreenPoint: Number(getCellValue(row, headers, 'TotalGreenPoint', 0)) || 0
+    }))
+    .sort((a, b) => b.TotalGreenPoint - a.TotalGreenPoint);
+
+  const facultyMembers = buildRanked('Faculty', faculty);
+  const majorMembers = buildRanked('Major', major);
+
+  const facultyRank = facultyMembers.findIndex((m) => String(m.UserID) === String(userId)) + 1;
+  const majorRank = majorMembers.findIndex((m) => String(m.UserID) === String(userId)) + 1;
+
+  return {
+    facultyRank: facultyRank || 0,
+    facultyTotal: facultyMembers.length,
+    majorRank: majorRank || 0,
+    majorTotal: majorMembers.length
+  };
+}
+
+// Wrapper สำหรับเรียกผ่าน action: 'getUserRank' โดยตรง (ไม่ผ่าน getDashboardData)
+function getUserRankForPayload(payload) {
+  const userEmail = payload.userEmail || payload.email || '';
+  const user = getOrCreateUser(userEmail, payload.username || userEmail || 'Guest');
+  const rankInfo = getUserRankInfo(user.UserID, user.Faculty, user.Major);
+  return { success: true, rankInfo: rankInfo };
 }
 
 function getUserProfile(payload) {
@@ -400,21 +460,33 @@ function deleteCarbonLog(payload) {
 }
 
 function getFacultyRanking() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('faculty_ranking');
+  if (cached) return { success: true, ranking: JSON.parse(cached) };
+
   const usersSheet = getUsersSheet();
   const values = usersSheet.getDataRange().getDisplayValues();
-  if (values.length <= 1) return { success: true, ranking: [] };
+  if (values.length <= 1) {
+    cache.put('faculty_ranking', JSON.stringify([]), 300);
+    return { success: true, ranking: [] };
+  }
   const headers = values[0];
   const rows = values.slice(1);
   const map = {};
   rows.forEach((row) => {
     const faculty = getCellValue(row, headers, 'Faculty', 'Unknown');
     const point = Number(getCellValue(row, headers, 'TotalGreenPoint', 0)) || 0;
-    map[faculty] = (map[faculty] || 0) + point;
+    if (!map[faculty]) {
+      map[faculty] = { TotalGreenPoint: 0, MemberCount: 0 };
+    }
+    map[faculty].TotalGreenPoint += point;
+    map[faculty].MemberCount += 1;
   });
   const ranking = Object.entries(map)
-    .map(([Faculty, TotalGreenPoint]) => ({ Faculty, TotalGreenPoint }))
+    .map(([Faculty, data]) => ({ Faculty, TotalGreenPoint: data.TotalGreenPoint, MemberCount: data.MemberCount }))
     .sort((a, b) => b.TotalGreenPoint - a.TotalGreenPoint)
     .slice(0, 10);
+  cache.put('faculty_ranking', JSON.stringify(ranking), 300);
   return { success: true, ranking };
 }
 
@@ -435,4 +507,161 @@ function getMajorRanking() {
     .sort((a, b) => b.TotalGreenPoint - a.TotalGreenPoint)
     .slice(0, 10);
   return { success: true, ranking };
+}
+
+function getPublicDashboardData() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('public_dashboard_data');
+  if (cached) return { success: true, records: JSON.parse(cached) };
+
+  const logsSheet = getCarbonLogsSheet();
+  const usersSheet = getUsersSheet();
+  const logsValues = logsSheet.getDataRange().getDisplayValues();
+  const usersValues = usersSheet.getDataRange().getDisplayValues();
+
+  if (logsValues.length <= 1) {
+    cache.put('public_dashboard_data', JSON.stringify([]), 300);
+    return { success: true, records: [] };
+  }
+
+  const logsHeaders = logsValues[0];
+  const usersHeaders = usersValues[0] || [];
+  const logs = logsValues.slice(1).filter((row) => String(getCellValue(row, logsHeaders, 'Status', '')).toLowerCase() === 'approved');
+  const users = usersValues.length > 1 ? rowsToObjects(usersValues.slice(1), usersHeaders) : [];
+
+  const typeNames = {
+    cap: 'ฝาขวดน้ำ',
+    snack: 'ซองขนม',
+    milk: 'กล่องนม',
+    can: 'กระป๋องอลูมิเนียม',
+    pet: 'ขวด PET'
+  };
+
+  const avgWeightPerItem = {
+    cap: 0.005,
+    snack: 0.003,
+    milk: 0.010,
+    can: 0.015,
+    pet: 0.015
+  };
+
+  function maskUsername(name) {
+    if (!name || name === 'คุณ') return 'คุณ';
+    const trimmed = name.trim();
+    if (trimmed.length <= 2) return trimmed;
+    return trimmed.substring(0, 2) + ' ***' + trimmed.substring(trimmed.length - 2);
+  }
+
+  const records = logs.map((row) => {
+    const userId = String(getCellValue(row, logsHeaders, 'UserID', ''));
+    const user = users.find((u) => String(u.UserID || u.Email || '') === userId) || {};
+    const wasteType = String(getCellValue(row, logsHeaders, 'WasteType', '')).toLowerCase();
+    const qty = Number(getCellValue(row, logsHeaders, 'Quantity', 0)) || 0;
+    const weight = Number((qty * (avgWeightPerItem[wasteType] || 0)).toFixed(3));
+
+    return {
+      id: getCellValue(row, logsHeaders, 'LogID', ''),
+      userMask: maskUsername(user.Username || user.Email || userId),
+      type: typeNames[wasteType] || getCellValue(row, logsHeaders, 'WasteType', ''),
+      typeId: wasteType,
+      qty: qty,
+      weight: weight,
+      point: Number(getCellValue(row, logsHeaders, 'GreenPoint', 0)) || 0,
+      carbon: Number(getCellValue(row, logsHeaders, 'CarbonSaved', 0)) || 0,
+      dateTime: getCellValue(row, logsHeaders, 'DateTime', ''),
+      date: getCellValue(row, logsHeaders, 'DateTime', ''),
+      img: getCellValue(row, logsHeaders, 'ImageURL', ''),
+      username: user.Username || user.Email || userId,
+      status: getCellValue(row, logsHeaders, 'Status', 'Approved')
+    };
+  }).reverse();
+
+  cache.put('public_dashboard_data', JSON.stringify(records), 300);
+  return { success: true, records };
+}
+
+function getPublicStats() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('public_stats');
+  if (cached) return { success: true, stats: JSON.parse(cached) };
+
+  const usersSheet = getUsersSheet();
+  const logsSheet = getCarbonLogsSheet();
+  const usersValues = usersSheet.getDataRange().getDisplayValues();
+  const logsValues = logsSheet.getDataRange().getDisplayValues();
+
+  const participants = usersValues.length > 1 ? usersValues.length - 1 : 0;
+
+  let totalItems = 0;
+  let totalWeight = 0;
+  let totalCarbon = 0;
+  let totalPoints = 0;
+
+  if (logsValues.length > 1) {
+    const headers = logsValues[0];
+    const statusIndex = getHeaderIndex(headers, 'Status');
+    const qtyIndex = getHeaderIndex(headers, 'Quantity');
+    const carbonIndex = getHeaderIndex(headers, 'CarbonSaved');
+    const pointIndex = getHeaderIndex(headers, 'GreenPoint');
+    const wasteTypeIndex = getHeaderIndex(headers, 'WasteType');
+
+    const avgWeightPerItem = { cap: 0.005, snack: 0.003, milk: 0.010, can: 0.015, pet: 0.015 };
+
+    logsValues.slice(1).forEach((row) => {
+      const status = statusIndex >= 0 ? String(row[statusIndex] || '').toLowerCase() : '';
+      if (status !== 'approved') return;
+
+      const qty = qtyIndex >= 0 ? Number(row[qtyIndex] || 0) || 0 : 0;
+      const wasteType = wasteTypeIndex >= 0 ? String(row[wasteTypeIndex] || '').toLowerCase() : '';
+      const weight = qty * (avgWeightPerItem[wasteType] || 0);
+      const carbon = carbonIndex >= 0 ? Number(row[carbonIndex] || 0) || 0 : 0;
+      const point = pointIndex >= 0 ? Number(row[pointIndex] || 0) || 0 : 0;
+
+      totalItems += qty;
+      totalWeight += weight;
+      totalCarbon += carbon;
+      totalPoints += point;
+    });
+  }
+
+  const stats = {
+    participants,
+    totalItems,
+    totalWeight: Number(totalWeight.toFixed(2)),
+    totalCarbon: Number(totalCarbon.toFixed(3)),
+    totalPoints
+  };
+
+  cache.put('public_stats', JSON.stringify(stats), 300);
+  return { success: true, stats };
+}
+
+function getLevelStats() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('level_stats');
+  if (cached) return { success: true, levels: JSON.parse(cached) };
+
+  const usersSheet = getUsersSheet();
+  const values = usersSheet.getDataRange().getDisplayValues();
+  if (values.length <= 1) {
+    cache.put('level_stats', JSON.stringify({ seed: 0, tree: 0, hero: 0, champion: 0 }), 300);
+    return { success: true, levels: { seed: 0, tree: 0, hero: 0, champion: 0 } };
+  }
+
+  const headers = values[0];
+  const rows = values.slice(1);
+  const pointIndex = getHeaderIndex(headers, 'TotalGreenPoint');
+
+  const stats = { seed: 0, tree: 0, hero: 0, champion: 0 };
+
+  rows.forEach((row) => {
+    const points = Number(getCellValue(row, headers, 'TotalGreenPoint', 0)) || 0;
+    if (points >= 701) stats.champion++;
+    else if (points >= 301) stats.hero++;
+    else if (points >= 101) stats.tree++;
+    else stats.seed++;
+  });
+
+  cache.put('level_stats', JSON.stringify(stats), 300);
+  return { success: true, levels: stats };
 }

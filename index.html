@@ -115,6 +115,12 @@
         
         <!-- === PUBLIC DASHBOARD (Hero Section) === -->
         <div id="publicDashboard" class="block animate-fade-in">
+            <div id="publicDashboardLoading" class="hidden fixed inset-0 bg-white/80 backdrop-blur-sm z-40 flex items-center justify-center">
+                <div class="text-center">
+                    <i class="fa-solid fa-spinner fa-spin text-4xl text-emerald-600 mb-3"></i>
+                    <p class="text-slate-600 font-medium">กำลังโหลดข้อมูล...</p>
+                </div>
+            </div>
             
             <div class="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 rounded-3xl p-8 md:p-12 shadow-2xl text-white relative overflow-hidden mb-10 flex flex-col md:flex-row items-center">
                 <!-- Background Decoration -->
@@ -136,7 +142,7 @@
                         <span class="text-amber-300">Carbon Hero</span>
                     </h1>
                     <p class="text-lg md:text-xl text-emerald-50 mb-8 font-light drop-shadow-sm max-w-2xl">
-                        "ทุกชิ้นที่นำมาส่ง ไม่ใช่แค่ขยะ แต่คือการ<strong class="font-semibold text-white">ลดคาร์บอน</strong>ของมหาวิทยาลัย"
+                        "ทุกชิ้นที่นำมาส่งไม่ใช่แค่ขยะแต่คือการ <strong class="font-semibold text-white"> ลดคาร์บอน </strong> ของมหาวิทยาลัย"
                     </p>
                     <button onclick="showLoginModal()" class="bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-3.5 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center justify-center mx-auto md:mx-0">
                         เริ่มสะสมความดีกันเลย <i class="fa-solid fa-arrow-right ml-2"></i>
@@ -250,10 +256,10 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden mb-10">
-                <div class="relative z-10">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 relative overflow-hidden mb-20">
+                <div class="relative z-15">
                     <h3 class="text-lg font-bold mb-4 flex items-center text-slate-800">
-                        <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i> กิจกรรมล่าสุด
+                        <i class="fa-solid fa-clock-rotate-left text-slate-800 mr-2 ml-1"></i> กิจกรรมล่าสุด
                     </h3>
                     
                     <div class="space-y-4" id="globalActivityFeed">
@@ -388,7 +394,7 @@
                     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 overflow-hidden">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-bold text-slate-800 flex items-center">
-                                <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i> ประวัติการทำกิจกรรมของคุณ
+                                <i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2 ml-1"></i> ประวัติการทำกิจกรรมของคุณ
                             </h3>
                         </div>
                         
@@ -578,7 +584,7 @@
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors mt-2">
+                    <button type="submit" id="loginBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors mt-2">
                         เข้าสู่ระบบ
                     </button>
                     
@@ -617,7 +623,7 @@
                             </div>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-colors mt-2 text-sm">
+                    <button type="submit" id="registerBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-colors mt-2 text-sm">
                         สมัครสมาชิก
                     </button>
                 </form>
@@ -778,6 +784,10 @@
             async getPublicStats() {
                 return this.request('getPublicStats', {});
             }
+
+            async getLevelStats() {
+                return this.request('getLevelStats', {});
+            }
         }
 
         const greenService = new NRRUGreenService(APP_CONFIG);
@@ -793,6 +803,7 @@
         let globalRecords = [];
         let userRecords = [];
         let publicStats = null;
+        let levelStats = null;
 
         const emissionFactors = {
             cap: 0.02,
@@ -939,7 +950,7 @@
                             </div>
                             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                                 <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-lg font-bold text-slate-800 flex items-center"><i class="fa-solid fa-clock-rotate-left text-emerald-500 mr-2"></i> กิจกรรมล่าสุด</h3>
+                                    <h3 class="text-lg font-bold text-slate-800 flex items-center"><i class="fa-solid fa-clock-rotate-left text-emerald-500 mr-2 ml-1"></i> กิจกรรมล่าสุด</h3>
                                     <span class="text-xs text-slate-500">10 รายการล่าสุด</span>
                                 </div>
                                 <div id="recentActivities" class="space-y-3 max-h-[320px] overflow-y-auto pr-1"></div>
@@ -977,9 +988,12 @@
         };
 
         async function initializeApp() {
+            const loadingEl = document.getElementById('publicDashboardLoading');
             const restored = await restoreSession();
             if (!restored) {
+                if (loadingEl) loadingEl.classList.remove('hidden');
                 await loadPublicDashboardData();
+                if (loadingEl) loadingEl.classList.add('hidden');
                 updateGlobalStats();
                 updatePersonalDashboard();
                 renderCarbonChart();
@@ -1113,7 +1127,7 @@
             const iconClass = isError ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-check text-xl';
             
             const msgBox = document.createElement('div');
-            msgBox.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[150] animate-fade-in flex items-center border border-slate-700 opacity-0 transition-opacity duration-500';
+            msgBox.className = 'fixed top-10 left-[40%] bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[150] animate-fade-in flex items-center border border-slate-700 opacity-0 transition-opacity duration-500';
             msgBox.innerHTML = `
                 <div class="${iconContainerClass}">
                     <i class="${iconClass}"></i>
@@ -1137,6 +1151,11 @@
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังเข้าสู่ระบบ...';
+            }
             
             if (email === 'admin@nrru.ac.th' && password === '123456') {
                 currentUser = {
@@ -1153,6 +1172,10 @@
                     LastActive: new Date().toISOString()
                 };
                 await completeAuth('Admin', currentUserProfile);
+                if (loginBtn) {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'เข้าสู่ระบบ';
+                }
                 return;
             }
             
@@ -1160,6 +1183,10 @@
 
             if (!result?.success) {
                 showMessage('เข้าสู่ระบบไม่สำเร็จ', result?.error || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', 'error');
+                if (loginBtn) {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'เข้าสู่ระบบ';
+                }
                 return;
             }
 
@@ -1170,6 +1197,10 @@
             };
             currentUserProfile = profile;
             await completeAuth(profile.Username || currentUser.name, profile);
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'เข้าสู่ระบบ';
+            }
         }
 
         async function register(e) {
@@ -1180,6 +1211,11 @@
             const studentId = document.getElementById('regId').value.trim();
             const phone = document.getElementById('regPhone').value.trim();
             const faculty = document.getElementById('regFaculty').value.trim();
+            const registerBtn = document.getElementById('registerBtn');
+            if (registerBtn) {
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังสมัครสมาชิก...';
+            }
 
             const result = await greenService.registerUser({
                 name,
@@ -1192,6 +1228,10 @@
 
             if (!result?.success) {
                     showMessage('สมัครสมาชิกไม่สำเร็จ', result?.error || 'ไม่สามารถสร้างบัญชีได้', 'error');
+                if (registerBtn) {
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = 'สมัครสมาชิก';
+                }
                 return;
             }
 
@@ -1202,6 +1242,10 @@
             };
             currentUserProfile = profile;
             await completeAuth(profile.Username || currentUser.name, profile);
+            if (registerBtn) {
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = 'สมัครสมาชิก';
+            }
         }
         
         async function completeAuth(displayName, profile = null, options = {}) {
@@ -1738,7 +1782,11 @@
             { id: 'first_recycle', icon: '🥉', name: 'First Recycle', desc: 'ส่งขยะครั้งแรก', check: (ctx) => ctx.logCount >= 1 },
             { id: 'carbon_saver', icon: '🥈', name: 'Carbon Saver', desc: 'ลดคาร์บอนเกิน 10 kg', check: (ctx) => ctx.totalCarbon >= 10 },
             { id: 'eco_hero', icon: '🥇', name: 'Eco Hero', desc: 'สะสม 1,000 Green Point', check: (ctx) => ctx.totalPoint >= 1000 },
-            { id: 'green_champion', icon: '🏆', name: 'Green Champion', desc: 'สะสม 10,000 Green Point', check: (ctx) => ctx.totalPoint >= 10000 }
+            { id: 'green_champion', icon: '🏆', name: 'Green Champion', desc: 'สะสม 10,000 Green Point', check: (ctx) => ctx.totalPoint >= 10000 },
+            { id: 'green_seed', icon: '🌱', name: 'Green Seed', desc: 'ระดับ Green Seed', check: () => true },
+            { id: 'green_tree', icon: '🌿', name: 'Green Tree', desc: 'ระดับ Green Tree', check: () => true },
+            { id: 'green_hero', icon: '🌳', name: 'Green Hero', desc: 'ระดับ Green Hero', check: () => true },
+            { id: 'green_legend', icon: '🏆', name: 'Green Champion', desc: 'ระดับ Green Champion', check: () => true }
             // [FUTURE] เพิ่ม Achievement ใหม่ได้ที่นี่ เช่น Achievement ที่ผูกกับ Friend/Team/Weekly Challenge
         ];
 
@@ -1752,13 +1800,21 @@
                 totalPoint: Number(currentUserProfile?.TotalGreenPoint || 0)
             };
 
+            const levelCounts = levelStats || { seed: 0, tree: 0, hero: 0, champion: 0 };
+
             grid.innerHTML = achievementDefinitions.map(a => {
                 const unlocked = a.check(ctx);
+                let countText = '';
+                if (a.id === 'green_seed') countText = levelCounts.seed > 0 ? `${levelCounts.seed} คน` : 'ยังไม่มีผู้ใช้งาน';
+                if (a.id === 'green_tree') countText = levelCounts.tree > 0 ? `${levelCounts.tree} คน` : 'ยังไม่มีผู้ใช้งาน';
+                if (a.id === 'green_hero') countText = levelCounts.hero > 0 ? `${levelCounts.hero} คน` : 'ยังไม่มีผู้ใช้งาน';
+                if (a.id === 'green_legend') countText = levelCounts.champion > 0 ? `${levelCounts.champion} คน` : 'ยังไม่มีผู้ใช้งาน';
+
                 return `
                     <div class="rounded-2xl border p-3 text-center transition-all ${unlocked ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-70'}">
                         <div class="text-3xl mb-1 ${unlocked ? '' : 'grayscale opacity-40'}">${a.icon}</div>
                         <p class="text-xs font-bold ${unlocked ? 'text-amber-700' : 'text-slate-400'}">${a.name}</p>
-                        <p class="text-[10px] mt-0.5 ${unlocked ? 'text-amber-600/80' : 'text-slate-400'}">${a.desc}</p>
+                        <p class="text-[10px] mt-0.5 ${unlocked ? 'text-amber-600/80' : 'text-slate-400'}">${countText || a.desc}</p>
                         ${unlocked
                             ? '<p class="text-[9px] text-emerald-600 font-semibold mt-1"><i class="fa-solid fa-circle-check mr-0.5"></i>ปลดล็อกแล้ว</p>'
                             : '<p class="text-[9px] text-slate-400 mt-1"><i class="fa-solid fa-lock mr-0.5"></i>ยังไม่ปลดล็อก</p>'}
@@ -1866,9 +1922,11 @@
         }
 
         async function loadPublicDashboardData() {
-            const [recordsResult, statsResult] = await Promise.all([
+            const [recordsResult, statsResult, levelResult, facultyResult] = await Promise.all([
                 greenService.getPublicDashboardData(),
-                greenService.getPublicStats()
+                greenService.getPublicStats(),
+                greenService.getLevelStats(),
+                greenService.getFacultyRanking()
             ]);
 
             if (recordsResult && recordsResult.success) {
@@ -1903,7 +1961,12 @@
                 publicStats = null;
             }
 
-            const facultyResult = await greenService.getFacultyRanking();
+            if (levelResult && levelResult.success && levelResult.levels) {
+                levelStats = levelResult.levels;
+            } else {
+                levelStats = null;
+            }
+
             if (facultyResult && facultyResult.success) {
                 dashboardData.facultyRanking = facultyResult.ranking || [];
             } else {
@@ -1967,6 +2030,13 @@
                 publicStats = statsResult.stats;
             } else {
                 publicStats = null;
+            }
+
+            const levelResult = await greenService.getLevelStats();
+            if (levelResult && levelResult.success && levelResult.levels) {
+                levelStats = levelResult.levels;
+            } else {
+                levelStats = null;
             }
         }
 
