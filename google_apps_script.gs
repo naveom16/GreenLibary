@@ -228,6 +228,7 @@ function registerUser(payload) {
 
   const now = new Date().toISOString();
   sheet.appendRow([userEmail, username, faculty, major, now, 0, 0, now, userEmail, password, studentId, phone]);
+  invalidatePublicStatsCache();
   const profile = {
     UserID: userEmail,
     Username: username,
@@ -398,6 +399,7 @@ function recalculateUserTotals(userId) {
     usersSheet.getRange(rowIndex, totalGreenIndex + 1).setValue(totalGreenPoint);
     usersSheet.getRange(rowIndex, totalCarbonIndex + 1).setValue(Number(totalCarbonSaved.toFixed(3)));
     usersSheet.getRange(rowIndex, lastActiveIndex + 1).setValue(new Date().toISOString());
+    invalidatePublicStatsCache();
   }
 }
 
@@ -636,32 +638,61 @@ function getPublicStats() {
   return { success: true, stats };
 }
 
+// [Hero Level] แหล่งข้อมูลกลางของระดับ Badge ทั้งระบบ (ใช้ทั้ง getLevelStats และในอนาคตกับ
+// Faculty Ranking / Major Ranking / Weekly Challenge / Team Challenge / Friend System ได้โดยไม่ต้อง
+// ออกแบบโครงสร้างระดับใหม่ — แก้เกณฑ์คะแนนหรือชื่อ/ไอคอนที่จุดเดียวนี้พอ)
+const HERO_LEVEL_DEFS = [
+  { name: 'Green Seed', icon: '🌱', min: 0, max: 99 },
+  { name: 'Green Tree', icon: '🌿', min: 100, max: 499 },
+  { name: 'Forest Guardian', icon: '🌳', min: 500, max: 999 },
+  { name: 'Carbon Hero', icon: '🏆', min: 1000, max: 1999 },
+  { name: 'Earth Legend', icon: '👑', min: 2000, max: Infinity }
+];
+
+function getHeroLevelForPoints(points) {
+  const p = Number(points) || 0;
+  for (let i = 0; i < HERO_LEVEL_DEFS.length; i++) {
+    const def = HERO_LEVEL_DEFS[i];
+    if (p >= def.min && p <= def.max) return def;
+  }
+  return HERO_LEVEL_DEFS[0];
+}
+
 function getLevelStats() {
   const cache = CacheService.getScriptCache();
   const cached = cache.get('level_stats');
-  if (cached) return { success: true, levels: JSON.parse(cached) };
+  if (cached) return JSON.parse(cached);
 
   const usersSheet = getUsersSheet();
   const values = usersSheet.getDataRange().getDisplayValues();
-  if (values.length <= 1) {
-    cache.put('level_stats', JSON.stringify({ seed: 0, tree: 0, hero: 0, champion: 0 }), 300);
-    return { success: true, levels: { seed: 0, tree: 0, hero: 0, champion: 0 } };
-  }
+  const headers = values[0] || ['UserID', 'Username', 'Faculty', 'Major', 'JoinDate', 'TotalGreenPoint', 'TotalCarbonSaved', 'LastActive', 'Email', 'Password', 'StudentID', 'Phone'];
+  const rows = values.length > 1 ? values.slice(1) : [];
+  const participants = rows.length;
 
-  const headers = values[0];
-  const rows = values.slice(1);
-  const pointIndex = getHeaderIndex(headers, 'TotalGreenPoint');
-
-  const stats = { seed: 0, tree: 0, hero: 0, champion: 0 };
-
+  // นับจำนวนผู้ใช้ในแต่ละระดับ โดยยึด TotalGreenPoint สะสมของ User แต่ละคนจากตาราง Users เท่านั้น
+  const counts = HERO_LEVEL_DEFS.map(() => 0);
   rows.forEach((row) => {
     const points = Number(getCellValue(row, headers, 'TotalGreenPoint', 0)) || 0;
-    if (points >= 701) stats.champion++;
-    else if (points >= 301) stats.hero++;
-    else if (points >= 101) stats.tree++;
-    else stats.seed++;
+    const idx = HERO_LEVEL_DEFS.findIndex((def) => points >= def.min && points <= def.max);
+    counts[idx >= 0 ? idx : 0]++;
   });
 
-  cache.put('level_stats', JSON.stringify(stats), 300);
-  return { success: true, levels: stats };
+  const levels = HERO_LEVEL_DEFS.map((def, idx) => ({
+    name: def.name,
+    icon: def.icon,
+    count: counts[idx],
+    percent: participants > 0 ? Number(((counts[idx] / participants) * 100).toFixed(1)) : 0
+  })).sort((a, b) => b.count - a.count);
+
+  const result = { success: true, participants, levels };
+  cache.put('level_stats', JSON.stringify(result), 300);
+  return result;
+}
+
+// เคลียร์ Cache ที่เกี่ยวกับข้อมูลสาธารณะ (ผู้เข้าร่วม / Hero Levels) เพื่อให้อัปเดตแบบ Real-time
+// ทุกครั้งที่มีผู้สมัครใหม่ หรือ Green Point ของผู้ใช้เปลี่ยนแปลง (ซึ่งอาจทำให้ระดับ Badge เปลี่ยนไปด้วย)
+function invalidatePublicStatsCache() {
+  const cache = CacheService.getScriptCache();
+  cache.remove('public_stats');
+  cache.remove('level_stats');
 }

@@ -1,0 +1,411 @@
+﻿body { font-family: 'Prompt', sans-serif; background-color: #f0fdf4; }
+.font-inter { font-family: 'Inter', sans-serif; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Animations */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+/* Animated Shine สำหรับ Level Hero Card */
+@keyframes shine {
+    0% { transform: translateX(-150%) skewX(-12deg); }
+    60% { transform: translateX(250%) skewX(-12deg); }
+    100% { transform: translateX(250%) skewX(-12deg); }
+}
+.animate-shine { animation: shine 3.5s ease-in-out infinite; }
+
+#recordFabAnim {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+#recordFabAnim svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Floating leaves animation */
+@keyframes floatLeaf {
+    0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+.animate-float-leaf {
+    animation: floatLeaf 6s ease-in-out infinite;
+}
+
+@keyframes sway {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+}
+.animate-sway {
+    animation: sway 3s ease-in-out infinite;
+}
+
+@keyframes pulse-tree {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.animate-pulse-tree {
+    animation: pulse-tree 2s ease-in-out infinite;
+}
+
+/* Card interactive effects */
+@keyframes countUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-count-up {
+    animation: countUp 0.6s ease-out forwards;
+}
+
+@keyframes progressFill {
+    from { width: 0%; }
+}
+.animate-progress-fill {
+    animation: progressFill 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes bounce-gentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+.animate-bounce-gentle {
+    animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+/* Card hover glow */
+.card-hover-glow {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover-glow:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+}
+
+/* Icon bounce on hover */
+.icon-bounce {
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.group:hover .icon-bounce {
+    transform: scale(1.15) rotate(5deg);
+}
+
+/* Progress bar animation */
+.progress-bar-animated {
+    position: relative;
+    overflow: hidden;
+}
+.progress-bar-animated::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+/* Ripple effect */
+@keyframes ripple {
+    0% { transform: scale(0); opacity: 0.6; }
+    100% { transform: scale(4); opacity: 0; }
+}
+.ripple-effect {
+    position: relative;
+    overflow: hidden;
+}
+.ripple-effect::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+.ripple-effect:active::before {
+    width: 200px;
+    height: 200px;
+}
+
+/* Staggered entrance animation */
+@keyframes cardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.card-entrance {
+    opacity: 0;
+    animation: cardEntrance 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* 3D Tilt effect */
+.card-3d-tilt {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    transition: transform 0.1s ease-out;
+}
+
+.card-3d-tilt .card-content {
+    transform: translateZ(20px);
+    transition: transform 0.1s ease-out;
+}
+
+/* Tilt shine effect */
+.card-tilt-shine {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-tilt-shine::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.card-3d-tilt:hover .card-tilt-shine::before {
+    opacity: 1;
+}
+
+/* Staggered delays for different card groups */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
+.stagger-9 { animation-delay: 0.9s; }
+
+/* Odometer / Spring number animation */
+@keyframes odometerSpring {
+    0% { transform: translateY(0) scale(1); }
+    20% { transform: translateY(-6px) scale(1.1); }
+    40% { transform: translateY(3px) scale(0.98); }
+    60% { transform: translateY(-1px) scale(1.02); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+.odometer-spring {
+    display: inline-block;
+    animation: odometerSpring 0.7s ease-out;
+}
+
+@keyframes countPop {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+}
+
+.count-pop {
+    animation: countPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Card press effect */
+.card-press {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-press:active {
+    transform: scale(0.98);
+}
+
+/* Enhanced card hover - bright/light theme on hover */
+.card-interactive {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-interactive::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.5);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.card-interactive:hover::before {
+    opacity: 1;
+}
+
+.card-interactive:hover {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 25px 50px rgba(16, 185, 129, 0.25);
+}
+
+.card-interactive:hover .card-icon {
+    transform: scale(1.2) rotate(5deg);
+}
+
+/* Full card color overlay on hover - bright theme */
+.card-color-overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.card-interactive:hover .card-color-overlay {
+    opacity: 1;
+}
+
+/* Text becomes dark on hover for contrast against bright bg */
+.card-interactive .card-text-invert {
+    transition: color 0.5s ease;
+}
+
+.card-interactive:hover .card-text-invert {
+    color: #0f172a;
+}
+
+/* Theme-specific text colors on hover */
+.theme-teal .card-interactive:hover .card-text-invert { color: #134e4a; }
+.theme-emerald .card-interactive:hover .card-text-invert { color: #064e3b; }
+.theme-indigo .card-interactive:hover .card-text-invert { color: #312e81; }
+.theme-blue .card-interactive:hover .card-text-invert { color: #1e3a8a; }
+.theme-amber .card-interactive:hover .card-text-invert { color: #78350f; }
+
+/* Subtitle text transition */
+.card-interactive .card-subtitle-invert {
+    transition: color 0.5s ease;
+}
+
+.card-interactive:hover .card-subtitle-invert {
+    color: #334155;
+}
+
+/* Theme-specific subtitle colors */
+.theme-teal .card-interactive:hover .card-subtitle-invert { color: #0f766e; }
+.theme-emerald .card-interactive:hover .card-subtitle-invert { color: #047857; }
+.theme-indigo .card-interactive:hover .card-subtitle-invert { color: #4338ca; }
+.theme-blue .card-interactive:hover .card-subtitle-invert { color: #1d4ed8; }
+.theme-amber .card-interactive:hover .card-subtitle-invert { color: #b45309; }
+
+/* Badge/unit text transition - dark text on light bg */
+.card-interactive .card-badge-invert {
+    transition: all 0.5s ease;
+}
+
+.card-interactive:hover .card-badge-invert {
+    background: rgba(255,255,255,0.85);
+    color: #0f172a;
+    border-color: rgba(255,255,255,1);
+    box-shadow: 0 0 20px rgba(255,255,255,0.6);
+}
+
+/* Theme-specific badge colors */
+.theme-teal .card-interactive:hover .card-badge-invert { background: rgba(153, 246, 228, 0.9); color: #134e4a; border-color: #5eead4; }
+.theme-emerald .card-interactive:hover .card-badge-invert { background: rgba(167, 243, 208, 0.9); color: #064e3b; border-color: #6ee7b7; }
+.theme-indigo .card-interactive:hover .card-badge-invert { background: rgba(199, 210, 254, 0.9); color: #312e81; border-color: #a5b4fc; }
+.theme-blue .card-interactive:hover .card-badge-invert { background: rgba(191, 219, 254, 0.9); color: #1e3a8a; border-color: #93c5fd; }
+.theme-amber .card-interactive:hover .card-badge-invert { background: rgba(253, 230, 138, 0.9); color: #78350f; border-color: #fcd34d; }
+
+/* Card inner glow on hover - bright sweep */
+.card-inner-glow {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-inner-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.8s ease;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.card-inner-glow:hover::after {
+    transform: translateX(100%);
+}
+
+/* Heartbeat interactive CTA */
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    14% { transform: scale(1.15); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.15); }
+    70% { transform: scale(1); }
+}
+.animate-heartbeat {
+    animation: heartbeat 1.8s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+.animate-ring-pulse {
+    animation: ring-pulse 1.6s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes previewPop {
+    0% { transform: scale(1); color: inherit; }
+    40% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+.preview-value-pop {
+    display: inline-block;
+    animation: previewPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
