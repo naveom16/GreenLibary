@@ -581,17 +581,17 @@
 
                             <!-- Image Upload Section -->
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">แนบรูปภาพหลักฐาน <span class="text-xs text-slate-400 font-normal">(เฉพาะ .jpg, .png)</span></label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">แนบรูปภาพหลักฐาน <span class="text-xs text-slate-400 font-normal">(ไฟล์ .jpg, .jpeg, .png ไม่เกิน 5MB)</span></label>
                                 <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:border-emerald-400 transition-colors bg-slate-50 group relative" id="imageUploadBox">
                                     <div class="space-y-1 text-center" id="uploadPlaceholder">
                                         <i class="fa-solid fa-camera text-3xl text-slate-400 group-hover:text-emerald-500 mb-2"></i>
                                         <div class="flex text-sm text-slate-600 justify-center">
                                             <label for="evidenceImage" class="relative cursor-pointer rounded-md font-medium text-emerald-600 hover:text-emerald-500 focus-within:outline-none">
-                                                <span>อัปโหลดรูปภาพ</span>
+                                                <span>เลือกไฟล์รูปภาพ</span>
                                                 <input id="evidenceImage" name="evidenceImage" type="file" accept=".jpg, .jpeg, .png" class="sr-only" onchange="handleImageUpload(event)">
                                             </label>
                                         </div>
-                                        <p class="text-xs text-slate-500">ถ่ายรูปขยะที่นำมาส่ง</p>
+                                        <p class="text-xs text-slate-500">รองรับไฟล์ .jpg, .jpeg, .png ขนาดไม่เกิน 5MB</p>
                                     </div>
                                     <!-- Image Preview -->
                                     <div id="imagePreviewContainer" class="hidden absolute inset-0 w-full h-full p-2">
@@ -1538,12 +1538,19 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            const MAX_FILE_SIZE = 5 * 1024 * 1024;
+            if (file.size > MAX_FILE_SIZE) {
+                showMessage('ไฟล์ใหญ่เกินไป', 'กรุณาเลือกรูปภาพขนาดไม่เกิน 5MB', 'error');
+                event.target.value = '';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 800;
+                    const MAX_SIZE = 600;
                     let width = img.width;
                     let height = img.height;
 
@@ -1563,7 +1570,9 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    const quality = 0.6;
+                    const mimeType = 'image/jpeg';
+                    const dataUrl = canvas.toDataURL(mimeType, quality);
                     
                     document.getElementById('imageDataString').value = dataUrl;
                     document.getElementById('imagePreview').src = dataUrl;
@@ -1637,6 +1646,7 @@
 
         async function submitRecord(e) {
             e.preventDefault();
+            showLoading();
             toggleRecordModal();
             
             const typeId = document.getElementById('wasteType').value;
@@ -1646,6 +1656,7 @@
             const editingLogId = document.getElementById('editingLogId').value;
 
             if(!typeId || !qty || !weight) {
+                hideLoading();
                 showMessage('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกประเภทและจำนวนก่อนบันทึก', 'error');
                 return;
             }
@@ -1721,6 +1732,7 @@
             updateGlobalStats();
             renderCarbonChart();
             renderRankings();
+            hideLoading();
             
             e.target.reset();
             removeImage();
@@ -2185,7 +2197,13 @@
                 return;
             }
 
-            const result = await greenService.getDashboardData(currentUser.email);
+            const [dashboardResult, statsResult, levelResult] = await Promise.all([
+                greenService.getDashboardData(currentUser.email),
+                greenService.getPublicStats(),
+                greenService.getLevelStats()
+            ]);
+
+            const result = dashboardResult;
             if (result && result.success) {
                 dashboardData = {
                     userProfile: result.userProfile || result.profile || null,
@@ -2233,14 +2251,12 @@
                 userRecords = [];
             }
 
-            const statsResult = await greenService.getPublicStats();
             if (statsResult && statsResult.success && statsResult.stats) {
                 publicStats = statsResult.stats;
             } else {
                 publicStats = null;
             }
 
-            const levelResult = await greenService.getLevelStats();
             if (levelResult && levelResult.success && levelResult.levels) {
                 levelStats = levelResult.levels;
                 renderLevelDistribution(levelResult.participants || 0, levelStats);
