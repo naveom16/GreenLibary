@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
     <title>NRRU Green Point & Carbon Hero</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -2759,6 +2759,15 @@
             sidebar.classList.toggle('collapsed');
             localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
         }
+
+        // Mobile: scroll focused input into view so keyboard doesn't cover it
+        document.addEventListener('focusin', (event) => {
+            if (!event.target || !event.target.matches('input, select, textarea')) return;
+            if (window.innerWidth >= 1024) return;
+            setTimeout(() => {
+                event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        });
 
         // Restore sidebar collapse state
         (function() {
