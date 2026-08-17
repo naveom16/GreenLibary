@@ -576,10 +576,7 @@
                                 <select id="historyFilter" class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     <option value="all">ทุกประเภท</option>
                                     <option value="snack">ซองขนม</option>
-                                    <option value="milk">กล่องนม</option>
-                                    <option value="can">กล่องอลูมิเนียม</option>
                                     <option value="cap">ฝาขวดน้ำ</option>
-                                    <option value="pet">ขวด PET</option>
                                 </select>
                             </div>
                         </div>
@@ -642,9 +639,6 @@
                                     <option value="">-- เลือกประเภท --</option>
                                     <option value="cap">ฝาขวดน้ำพลาสติก</option>
                                     <option value="snack">ซองขนมพลาสติก</option>
-                                    <option value="milk">กล่องนม UHT</option>
-                                    <option value="can">กระป๋องอลูมิเนียม</option>
-                                    <option value="pet">ขวด PET (ใส)</option>
                                 </select>
                             </div>
                             
@@ -1021,26 +1015,17 @@
 
         const emissionFactors = {
             cap: 0.02,
-            snack: 0.02,
-            milk: 0.15,
-            can: 0.20,
-            pet: 0.02
+            snack: 0.02
         };
 
         const avgWeightPerItem = {
             cap: 0.005,
-            snack: 0.003,
-            milk: 0.010,
-            can: 0.015,
-            pet: 0.015
+            snack: 0.003
         };
 
         const typeNames = {
             cap: 'ฝาขวดน้ำ',
-            snack: 'ซองขนม',
-            milk: 'กล่องนม',
-            can: 'กล่องอลูมิเนียม',
-            pet: 'ขวด PET'
+            snack: 'ซองขนม'
         };
 
         let historyFilters = { search: '', filter: 'all' };
@@ -1073,7 +1058,7 @@
 
         function normalizeLogRecord(log, profile) {
             const typeId = String(log.WasteType || log.typeId || '').toLowerCase();
-            const normalizedType = typeId in typeNames ? typeId : (typeId === 'aluminum' || typeId === 'aluminium' ? 'can' : 'snack');
+            const normalizedType = typeId in typeNames ? typeId : 'snack';
             const quantity = Number(log.Quantity || log.qty || 0);
             const carbonSaved = Number(log.CarbonSaved || log.carbon || 0);
             const greenPoint = Number(log.GreenPoint || log.point || 0);
@@ -1127,10 +1112,7 @@
                                 <select id="historyFilter" class="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     <option value="all">ทุกประเภท</option>
                                     <option value="snack">ซองขนม</option>
-                                    <option value="milk">กล่องนม</option>
-                                    <option value="can">กล่องอลูมิเนียม</option>
                                     <option value="cap">ฝาขวดน้ำ</option>
-                                    <option value="pet">ขวด PET</option>
                                 </select>
                             </div>
                         </div>
@@ -2399,9 +2381,7 @@
             displayRecords.forEach(r => {
                 let icon = 'fa-box';
                 let colorClass = 'text-slate-400 bg-slate-100';
-                if(r.typeId === 'pet' || r.typeId === 'cap') { icon = 'fa-bottle-water'; colorClass = 'text-blue-500 bg-blue-50'; }
-                else if(r.typeId === 'can') { icon = 'fa-prescription-bottle'; colorClass = 'text-amber-500 bg-amber-50'; }
-                else if(r.typeId === 'milk') { icon = 'fa-box-open'; colorClass = 'text-orange-500 bg-orange-50'; }
+                if(r.typeId === 'cap') { icon = 'fa-bottle-water'; colorClass = 'text-blue-500 bg-blue-50'; }
                 else if(r.typeId === 'snack') { icon = 'fa-cookie'; colorClass = 'text-purple-500 bg-purple-50'; }
 
                 let imgBadge = '';
@@ -2593,7 +2573,7 @@
         }
 
         function renderWasteChart() {
-            const stats = { pet: 1200, can: 800, milk: 650, snack: 450, cap: 400 };
+            const stats = { snack: 450, cap: 400 };
             
             globalRecords.forEach(r => {
                 if(stats[r.typeId] !== undefined) {
@@ -2605,9 +2585,6 @@
             document.getElementById('donutTotal').textContent = total.toLocaleString();
 
             const types = [
-                { id: 'pet', name: 'ขวด PET', color: '#1F6B4C', dotClass: 'bg-emerald-500' },
-                { id: 'can', name: 'กระป๋องอลูมิเนียม', color: '#C99A3D', dotClass: 'bg-amber-500' },
-                { id: 'milk', name: 'กล่องนม UHT', color: '#D9527C', dotClass: 'bg-rose-500' },
                 { id: 'snack', name: 'ซองขนม', color: '#8E7CC3', dotClass: 'bg-purple-500' },
                 { id: 'cap', name: 'ฝาขวดน้ำ', color: '#4A8299', dotClass: 'bg-blue-500' }
             ];
