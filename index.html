@@ -85,7 +85,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <script>
         window.NRRU_GREEN_CONFIG = window.NRRU_GREEN_CONFIG || {
-            API_URL: 'https://script.google.com/macros/s/AKfycbwoSd5a0gS8j4Pssohf-20koyQjFrvKioZIiOZ-1z-311-CpD5Isi3Xy55jVDE_2ERx/exec',
+            API_URL: 'https://script.google.com/macros/s/AKfycbxUwxjX5u2JocZtXtQiGIV2nYhTrxZTdShjKG6VLbyrQJjdf57WPnXzWFRLwwNbuvYQ/exec',
             API_KEY: 'AIzaSyCXCHIB8bLk27t9_pVQ7LK3jX4F64lbyH4',
             
             PROXY_URL: '',
@@ -1717,6 +1717,7 @@
                     if (regEmailInput) {
                         regEmailInput.classList.remove('border-slate-200', 'bg-slate-50');
                         regEmailInput.classList.add('border-red-400', 'bg-red-50');
+                        regEmailInput.focus();
                     }
                 } else {
                     showMessage('สมัครสมาชิกไม่สำเร็จ', errorMsg, 'error');
