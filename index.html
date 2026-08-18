@@ -38,7 +38,7 @@
     <link rel="stylesheet" href="css/main.css">
     <style>
         /* Premium canvas background + numeric/display type helpers (adds to, never overrides, main.css) */
-        body { background-color: #F5F7F1; }
+        body { background-color: #EDFFED; }
         .num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
         .ring-motif {
             background-image: repeating-radial-gradient(circle at 85% 40%, rgba(15,58,41,0.05) 0px, rgba(15,58,41,0.05) 1.5px, transparent 1.5px, transparent 26px);
@@ -456,10 +456,6 @@
                         </div>
                         <div class="min-w-0">
                             <h3 id="profileFullName" class="font-display text-xl md:text-2xl font-bold text-slate-800 truncate">นักศึกษา NRRU</h3>
-                            <p class="text-sm text-slate-500 mt-0.5">
-                                <i class="fa-solid fa-id-card text-slate-400 mr-1"></i>
-                                <span id="profileStudentId">-</span>
-                            </p>
                             <p class="text-sm text-slate-500 mt-0.5 truncate">
                                 <i class="fa-solid fa-building-columns text-slate-400 mr-1"></i>
                                 <span id="profileFaculty">-</span>
@@ -470,7 +466,7 @@
                     <!-- Rank Personal (เฉพาะอันดับของฉัน ไม่แสดงรายชื่อคนอื่น) -->
                     <div class="flex gap-3 flex-shrink-0">
                         <div class="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 text-center min-w-[104px]">
-                            <p class="text-[10px] font-semibold text-emerald-600 mb-1 tracking-wide">อันดับในคณะ</p>
+                            <p class="text-[10px] font-semibold text-emerald-600 mb-1 tracking-wide">อันดับในหน่วยงานคณะ</p>
                             <p class="num text-xl font-black text-emerald-700"><span id="profileFacultyRank">-</span></p>
                             <p class="text-[10px] text-emerald-500" id="profileFacultyRankTotal"></p>
                         </div>
@@ -758,19 +754,28 @@
                             <input type="text" id="regName" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="สมชาย รักษ์โลก">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">รหัสนักศึกษา/สมาชิก</label>
-                            <input type="text" id="regId" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="65xxxxxxx">
-                        </div>
-                        <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">เบอร์โทรศัพท์</label>
                             <input type="tel" id="regPhone" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="08x-xxx-xxxx">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">คณะ</label>
-                            <input type="text" id="regFaculty" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="คณะวิทยาศาสตร์">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">หน่วยงาน/คณะ</label>
+                            <select id="regFaculty" required onchange="toggleOtherFaculty()" class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                <option value="">-- เลือกหน่วยงาน --</option>
+                                <option value="คณะครุศาสตร์">คณะครุศาสตร์</option>
+                                <option value="คณะมนุษยศาสตร์และสังคมศาสตร์">คณะมนุษยศาสตร์และสังคมศาสตร์</option>
+                                <option value="คณะวิทยาการจัดการ">คณะวิทยาการจัดการ</option>
+                                <option value="คณะวิทยาศาสตร์และเทคโนโลยี">คณะวิทยาศาสตร์และเทคโนโลยี</option>
+                                <option value="คณะเทคโนโลยีอุตสาหกรรม">คณะเทคโนโลยีอุตสาหกรรม</option>
+                                <option value="คณะสาธารณสุขศาสตร์">คณะสาธารณสุขศาสตร์</option>
+                                <option value="คณะพยาบาลศาสตร์">คณะพยาบาลศาสตร์</option>
+                                <option value="โรงเรียนสาธิตมัธยม">โรงเรียนสาธิตฝ่ายมัธยม</option>
+                                <option value="โรงเรียนสาธิตประถมวัย">โรงเรียนสาธิตฝ่ายประถมวัย</option>
+                                <option value="other">หน่วยงานอื่นๆ</option>
+                            </select>
+                            <input type="text" id="regFacultyOther" class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500 mt-2 hidden" placeholder="ระบุหน่วยงาน">
                         </div>
                         <div class="col-span-2">
-                            <label class="block text-xs font-medium text-slate-700 mb-1">อีเมล (ใช้เป็น User เข้าสู่ระบบ)</label>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">อีเมล </label>
                             <input type="email" id="regEmail" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="email@nrru.ac.th">
                         </div>
                         <div class="col-span-2">
@@ -1436,14 +1441,29 @@
             }
         }
 
+        function toggleOtherFaculty() {
+            const select = document.getElementById('regFaculty');
+            const otherInput = document.getElementById('regFacultyOther');
+            if (!select || !otherInput) return;
+            if (select.value === 'other') {
+                otherInput.classList.remove('hidden');
+                otherInput.required = true;
+            } else {
+                otherInput.classList.add('hidden');
+                otherInput.required = false;
+                otherInput.value = '';
+            }
+        }
+
         async function register(e) {
             e.preventDefault();
             const name = document.getElementById('regName').value.trim();
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
-            const studentId = document.getElementById('regId').value.trim();
             const phone = document.getElementById('regPhone').value.trim();
-            const faculty = document.getElementById('regFaculty').value.trim();
+            const facultySelect = document.getElementById('regFaculty').value.trim();
+            const facultyOther = document.getElementById('regFacultyOther').value.trim();
+            const faculty = facultySelect === 'other' ? facultyOther : facultySelect;
             const registerBtn = document.getElementById('registerBtn');
             if (registerBtn) {
                 registerBtn.disabled = true;
@@ -1454,7 +1474,6 @@
                 name,
                 email,
                 password,
-                studentId,
                 phone,
                 faculty
             });
@@ -2125,8 +2144,7 @@
             const displayName = profile.Username || currentUser?.name || 'นักศึกษา NRRU';
 
             document.getElementById('profileFullName').textContent = displayName;
-            document.getElementById('profileStudentId').textContent = profile.StudentID || 'ไม่ระบุรหัสนักศึกษา';
-            document.getElementById('profileFaculty').textContent = profile.Faculty || 'ไม่ระบุคณะ';
+            document.getElementById('profileFaculty').textContent = profile.Faculty || 'ไม่ระบุหน่วยงาน';
 
             const rankInfo = dashboardData.rankInfo || {};
             document.getElementById('profileFacultyRank').textContent = rankInfo.facultyRank ? `#${rankInfo.facultyRank}` : '-';
@@ -2584,8 +2602,8 @@
             document.getElementById('donutTotal').textContent = total.toLocaleString();
 
             const types = [
-                { id: 'snack', name: 'ซองขนม', color: '#8E7CC3', dotClass: 'bg-purple-500' },
-                { id: 'cap', name: 'ฝาขวดน้ำ', color: '#4A8299', dotClass: 'bg-blue-500' }
+                { id: 'snack', name: 'ซองขนม', color: '#22c55e', dotClass: 'bg-green-500' },
+                { id: 'cap', name: 'ฝาขวดน้ำ', color: '#14b8a6', dotClass: 'bg-teal-500' }
             ];
 
             const chartCanvas = document.getElementById('wasteDonutChart');
