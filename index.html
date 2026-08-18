@@ -755,7 +755,8 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">เบอร์โทรศัพท์</label>
-                            <input type="tel" id="regPhone" required class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="08x-xxx-xxxx">
+                            <input type="tel" id="regPhone" required maxlength="10" oninput="validatePhoneInput(this)" class="w-full rounded-lg border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="08x-xxx-xxxx">
+                            <p id="phoneError" class="text-xs text-red-500 mt-1 hidden">เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 ตัว ไม่เกิน 10 ตัว</p>
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">หน่วยงาน/คณะ</label>
@@ -1484,6 +1485,16 @@
             }
         }
 
+        function validatePhoneInput(input) {
+            input.value = input.value.replace(/[^0-9]/g, '').slice(0, 10);
+            const phoneError = document.getElementById('phoneError');
+            if (input.value.length > 0 && input.value.length !== 10) {
+                if (phoneError) phoneError.classList.remove('hidden');
+            } else {
+                if (phoneError) phoneError.classList.add('hidden');
+            }
+        }
+
         function validatePassword(password) {
             const errors = [];
             if (!password || password.length === 0) {
@@ -1530,6 +1541,14 @@
                     registerBtn.innerHTML = 'สมัครสมาชิก';
                 }
                 showMessage('รหัสผ่านไม่ถูกต้อง', passwordErrors.join('\n'), 'error');
+                return;
+            }
+            if (!/^[0-9]{10}$/.test(phone)) {
+                if (registerBtn) {
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = 'สมัครสมาชิก';
+                }
+                showMessage('เบอร์โทรศัพท์ไม่ถูกต้อง', 'เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 ตัว ไม่เกิน 10 ตัว', 'error');
                 return;
             }
             if (registerBtn) {
